@@ -102,7 +102,7 @@ export const STAT_INFO = {
   AGI: { name: 'Agility', color: '#ffd166', desc: 'Explosive, coordination and mobility work.' },
   VIT: { name: 'Vitality', color: '#8b6cff', desc: 'Core stability, legs and recovery.' },
 };
-export const BASE_STATS = { STR: 10, END: 10, AGI: 10, VIT: 10 };
+export const BASE_STATS = { STR: 0, END: 0, AGI: 0, VIT: 0 }; // set by Mission 0
 
 /** Stat gains for a training day (warm-up excluded). */
 export function statGainsForDay(dayDef) {

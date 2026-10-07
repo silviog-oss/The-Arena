@@ -47,6 +47,19 @@
     <div id="root">
       <div id="boot"><img class="sigil" src="./logo.svg" alt="" />The Arena</div>
     </div>
+    <script>
+      /* If a static host (e.g. GitHub Pages) serves this SOURCE page instead of the built app,
+         jump to the built app in ./docs/. Skipped in the Vite dev server (it injects @vite/client)
+         and in the built docs/index.html (which doesn't contain this script). */
+      (function () {
+        if (document.querySelector('script[src*="@vite/client"]') || location.pathname.indexOf('/docs/') !== -1) return;
+        if (document.querySelector('script[src*="assets/index-"]')) return; // this IS the built app
+        if (location.port === '5173') return;
+        fetch('./docs/index.html', { method: 'HEAD', cache: 'no-store' })
+          .then(function (r) { if (r.ok) location.replace('./docs/' + location.search + location.hash); })
+          .catch(function () {});
+      })();
+    </script>
     <script type="module" src="./src/main.jsx"></script>
     <script>
       /* Boot watchdog: if the app hasn't started after 7s, explain why instead of hanging on the logo. */
@@ -58,7 +71,7 @@
           var reason = location.protocol === 'file:'
             ? 'The app was opened as a local file. Run <code>npm run dev</code>, or open the deployed site URL.'
             : unbuilt
-              ? 'This server is serving the <b>source code</b>, not the built app. In GitHub: Settings → Pages → Branch: <b>main</b>, folder <b>/docs</b>.'
+              ? 'This server is serving the <b>source code</b> and no built app was found next to it.<br><br>On GitHub: make sure the <b>docs</b> folder is at the <b>top level</b> of the repo (not inside another folder), then Settings → Pages → Branch <b>main</b>, folder <b>/docs</b>.'
               : 'The app files could not load (old cache or a bad connection).';
           boot.innerHTML = '<img class="sigil" src="./logo.svg" alt="" style="animation:none" />' +
             '<div style="max-width:320px;text-align:center;letter-spacing:0;text-transform:none;font-weight:400;font-size:14px;line-height:1.5;color:#aab2d0">' +

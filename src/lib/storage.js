@@ -57,6 +57,11 @@ function migrate(data) {
   if (data && !('evaluations' in data) && (data.xp > 0 || Object.keys(data.completed || {}).length)) {
     data = { ...data, evaluations: [], evalSkipped: true };
   }
+  // Not evaluated yet (and not skipped) → stats must be 0 until Mission 0.
+  // Fixes saves from older versions where stats started at 10.
+  if (data && !(data.evaluations || []).length && !data.evalSkipped) {
+    data = { ...data, stats: { STR: 0, END: 0, AGI: 0, VIT: 0 } };
+  }
   // Shallow-merge so new fields added in later versions get defaults.
   return {
     ...base,

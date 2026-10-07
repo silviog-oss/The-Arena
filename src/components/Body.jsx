@@ -252,12 +252,13 @@ export function GoalForm({ body, onSave, onClear }) {
               >
                 <b>{p.label}</b>
                 <small className="mono">{fmtRate(p.kgPerWeek)}/wk</small>
+                <small className="mono per-month">≈{fmtRate(Math.round(p.kgPerWeek * (31 / 7) * 10) / 10)}/mo</small>
                 {p.recommended && <i>Recommended</i>}
               </button>
             ))}
           </div>
           {paces.some((p) => p.capped) && (
-            <p className="muted small">Max pace is capped at 1% of your body weight per week ({fmtRate(maxSafeRate(direction, body.weightKg))}) for safety.</p>
+            <p className="muted small">Max pace is capped at 5 kg per month and 1.5% of your body weight per week ({fmtRate(maxSafeRate(direction, body.weightKg))}) for safety.</p>
           )}
           {paces.some((p) => p.disabled) && <p className="muted small">Faster paces aren’t available under 18.</p>}
         </div>

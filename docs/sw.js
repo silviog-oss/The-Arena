@@ -4,9 +4,9 @@
  * • Serves the app shell offline (cache-first for assets, network-first for pages).
  * • Handles Web Push messages and notification clicks.
  */
-const VERSION = 'muycpmye';
+const VERSION = 'muyd8ako';
 const CACHE = `arena-${VERSION}`;
-const PRECACHE = ["./assets/index-CFNMs8uG.css","./assets/index-DEkNevl-.js","./favicon.png","./icons/apple-touch-icon.png","./icons/badge-96.png","./icons/icon-192.png","./icons/icon-512.png","./icons/logo-1024.png","./icons/maskable-512.png","./index.html","./logo.svg","./manifest.json","./"];
+const PRECACHE = ["./.nojekyll","./assets/index-D1EU4DIm.css","./assets/index-SmRp9XC7.js","./favicon.png","./icons/apple-touch-icon.png","./icons/badge-96.png","./icons/icon-192.png","./icons/icon-512.png","./icons/logo-1024.png","./icons/maskable-512.png","./index.html","./logo.svg","./manifest.json","./"];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

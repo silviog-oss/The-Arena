@@ -6,7 +6,8 @@
  * and the warm-up is always kept.
  *
  * Safety caps:
- *  - Weight loss: max 1 kg/week AND max 1% of body weight per week (whichever is lower).
+ *  - Weight loss: max 5 kg per 31 days (≈1.13 kg/week) AND max 1.5% of body weight per week,
+ *    whichever is lower. Above ~1 kg/week is aggressive — the UI warns accordingly.
  *  - Weight gain: max 0.5 kg/week (faster gain is mostly fat, not muscle).
  *  - Under 18: only the two gentlest paces.
  */
@@ -18,7 +19,7 @@ export const PACES = {
     { id: 'relaxed', label: 'Relaxed', kgPerWeek: 0.25, intensity: 'easy' },
     { id: 'steady', label: 'Steady', kgPerWeek: 0.5, intensity: 'normal', recommended: true },
     { id: 'fast', label: 'Fast', kgPerWeek: 0.75, intensity: 'hard' },
-    { id: 'max', label: 'Max safe', kgPerWeek: 1.0, intensity: 'intense' },
+    { id: 'max', label: 'Max safe', kgPerWeek: 1.13, intensity: 'intense' }, // ≈5 kg per 31 days
   ],
   gain: [
     { id: 'relaxed', label: 'Lean', kgPerWeek: 0.1, intensity: 'easy' },
@@ -30,7 +31,7 @@ export const PACES = {
 /** Absolute safe max kg/week for this person. */
 export function maxSafeRate(direction, weightKg) {
   if (direction === 'gain') return 0.5;
-  return Math.min(1, Math.round(weightKg * 0.01 * 100) / 100);
+  return Math.min(1.13, Math.round(weightKg * 0.015 * 100) / 100);
 }
 
 /** Paces available for this person, with unsafe ones flagged. */

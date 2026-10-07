@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useGame } from '../state/GameContext.jsx';
 import { LogoMark } from '../components/Logo.jsx';
 import { Button, Disclaimer } from '../components/UI.jsx';
-import { BodyForm } from '../components/Body.jsx';
+import { BodyForm, GoalForm } from '../components/Body.jsx';
+import { bodyComplete } from '../lib/body.js';
 
 const LEVELS = [
   { id: 'beginner', label: 'New to training', sub: 'Starts with easier variations (wall/knee push-ups, assisted squats).' },
@@ -40,7 +41,7 @@ export default function Onboarding() {
 
       {step === 1 && (
         <div className="ob-step">
-          <p className="eyebrow">Step 1 of 3</p>
+          <p className="eyebrow">Step 1 of 4</p>
           <h2>Who enters the Arena?</h2>
           <input
             className="input"
@@ -67,7 +68,7 @@ export default function Onboarding() {
 
       {step === 2 && (
         <div className="ob-step">
-          <p className="eyebrow">Step 2 of 3</p>
+          <p className="eyebrow">Step 2 of 4</p>
           <h2>Body profile</h2>
           <p className="muted">Used to calculate your BMI and a daily water target. Stays on this device.</p>
           <BodyForm
@@ -77,7 +78,7 @@ export default function Onboarding() {
               actions.setBody(b);
               setStep(3);
             }}
-            onSkip={() => setStep(3)}
+            onSkip={() => setStep(4)}
           />
           <button className="link-btn" onClick={() => setStep(1)}>Back</button>
         </div>
@@ -85,7 +86,28 @@ export default function Onboarding() {
 
       {step === 3 && (
         <div className="ob-step">
-          <p className="eyebrow">Step 3 of 3</p>
+          <p className="eyebrow">Step 3 of 4</p>
+          <h2>Your goal</h2>
+          <p className="muted">Set a goal weight or BMI and how fast you want to get there. Your pace adjusts workout difficulty, and S-Rank requires getting close to this goal.</p>
+          {bodyComplete(state.profile.body) ? (
+            <GoalForm
+              body={state.profile.body}
+              onSave={(goal) => {
+                actions.setBody({ goal });
+                setStep(4);
+              }}
+            />
+          ) : (
+            <p className="note">A goal needs your weight and height. Go back to add them, or set a goal later in Profile.</p>
+          )}
+          <button className="link-btn" onClick={() => setStep(4)}>Skip — set a goal later</button>
+          <button className="link-btn" onClick={() => setStep(2)}>Back</button>
+        </div>
+      )}
+
+      {step === 4 && (
+        <div className="ob-step">
+          <p className="eyebrow">Step 4 of 4</p>
           <h2>Before you start</h2>
           <Disclaimer />
           <ul className="ob-points small">
@@ -105,7 +127,7 @@ export default function Onboarding() {
           >
             Enter The Arena
           </Button>
-          <button className="link-btn" onClick={() => setStep(2)}>
+          <button className="link-btn" onClick={() => setStep(bodyComplete(state.profile.body) ? 3 : 2)}>
             Back
           </button>
         </div>

@@ -24,7 +24,7 @@
 - **Body profile and BMI.** Age, gender, weight and height (kg/cm or lb/ft-in), with BMI, the WHO category and a gauge. Under-18s are told to use youth percentile charts instead.
 - **Variation-based XP.** Each completed set earns XP at the multiplier for the variation you actually used: beginner ×0.8, standard ×1, advanced ×1.25 (skipped sets don't count). Mission screens show the XP for your current choices.
 - **New Game+ cycles.** After Day 31, start Cycle 2, 3 and so on. Each cycle adds +20% reps, +15% timed sets and +15% XP (capped at cycle 3). Level, stats, rank (it never drops), streak, achievements and goal carry over, because real goals usually take longer than 31 days.
-- **Goal pace adapts difficulty.** Choose how fast to lose or gain (Relaxed / Steady / Fast / Max safe). Loss is capped at 1 kg/week and 1% of body weight per week, gain at 0.5 kg/week. You see a realistic timeline and a warning about how the pace changes workouts. Faster paces add sets, shorten rests and give +10–20% XP. Relaxed removes sets and lengthens rests. Gain goals shift volume from cardio to strength. Recovery days never change.
+- **Goal pace adapts difficulty.** Choose how fast to lose or gain (Relaxed / Steady / Fast / Max safe). Loss is capped at 5 kg per 31 days (≈1.13 kg/week) and 1.5% of body weight per week, gain at 0.5 kg/week. You see a realistic timeline and a warning about how the pace changes workouts. Faster paces add sets, shorten rests and give +10–20% XP. Relaxed removes sets and lengthens rests. Gain goals shift volume from cardio to strength. Recovery days never change.
 - **Goal weight / goal BMI.** Set a goal either way, log your weight, and see progress, the amount left to lose or gain, and a time estimate at 0.5 kg/week. Goals below a BMI of 18.5 are blocked.
 - **Streaks.** Current and longest streak. Missing a day resets the streak but **never** your program progress.
 - **"?" help during workouts.** Tap **?** in the workout to see an animated stick-figure demo, your current variation and its cue, step-by-step form instructions and a safety tip. The timer pauses while it's open. Figures also appear in mission lists, the exercise library and the evaluation tests (original illustrations, defined in `src/data/poses.js`).
@@ -126,6 +126,8 @@ The output goes to `docs/`. It's fully static and uses relative paths, so it wor
 **GitHub Pages via Actions (optional):** set Source to **GitHub Actions**. The included workflow runs `npm run build` on every push and deploys `docs/`.
 
 **Any static host** (Netlify, Vercel, Cloudflare Pages, Firebase Hosting): set the build command to `npm run build` and the publish folder to `docs`. HTTPS is required for service workers and notifications.
+
+**Served the source by mistake?** The root `index.html` detects that and redirects to `docs/` automatically, so the app works even if Pages points at the repo root.
 
 **Stuck on the logo after an update?** Use the **Clear cache & reload** button on that screen. Your progress is kept.
 
