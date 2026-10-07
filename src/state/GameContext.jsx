@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import { load, save, initialState, importData } from '../lib/storage.js';
 import { completeDay, toggleQuest } from '../lib/game.js';
-import { deriveProfile } from '../lib/progression.js';
+import { deriveProfile, toDateKey } from '../lib/progression.js';
 import { EXERCISE_MAP, defaultVariationIndex } from '../data/exercises.js';
 
 const GameContext = createContext(null);
@@ -10,6 +10,17 @@ function reducer(state, action) {
   switch (action.type) {
     case 'ONBOARD':
       return { ...state, profile: { ...state.profile, ...action.profile, onboarded: true } };
+    case 'SET_BODY': {
+      // Keep a weight log so goal progress can be tracked over time.
+      const prev = state.profile.body;
+      const body = { ...prev, ...action.body };
+      if (action.body.weightKg && action.body.weightKg !== prev.weightKg) {
+        const date = toDateKey();
+        const log = (prev.weightLog || []).filter((e) => e.date !== date);
+        body.weightLog = [...log, { date, kg: action.body.weightKg }].slice(-365);
+      }
+      return { ...state, profile: { ...state.profile, body } };
+    }
     case 'SET_NAME':
       return { ...state, profile: { ...state.profile, name: action.name } };
     case 'REPLACE':
@@ -63,6 +74,7 @@ export function GameProvider({ children }) {
     () => ({
       onboard: (p) => dispatch({ type: 'ONBOARD', profile: p }),
       setName: (name) => dispatch({ type: 'SET_NAME', name }),
+      setBody: (body) => dispatch({ type: 'SET_BODY', body }),
       setVariation: (id, index) => dispatch({ type: 'SET_VARIATION', id, index }),
       updateSettings: (patch) => dispatch({ type: 'SETTINGS', patch }),
       updateNotifications: (patch) => dispatch({ type: 'NOTIFY_SETTINGS', patch }),

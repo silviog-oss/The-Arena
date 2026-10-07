@@ -2,6 +2,7 @@ import { useGame } from '../state/GameContext.jsx';
 import { DAY_MAP, QUEST_XP } from '../data/program.js';
 import { Icon } from './Icons.jsx';
 import { notify, MESSAGES } from '../lib/notifications.js';
+import { questText } from '../lib/body.js';
 
 /** Main / daily / bonus quests for a day. Optional quests toggle XP on/off. */
 export default function QuestList({ day, nav }) {
@@ -38,7 +39,7 @@ export default function QuestList({ day, nav }) {
             <span className="quest-check">{q[kind] && <Icon name="check" size={16} />}</span>
             <div>
               <span className="quest-kind">{kind === 'daily' ? 'Daily quest' : 'Bonus quest'} · optional</span>
-              <p>{def[kind]}</p>
+              <p>{questText(def[kind], state.profile.body)}</p>
             </div>
             <span className="quest-xp">+{QUEST_XP[kind]}</span>
           </button>

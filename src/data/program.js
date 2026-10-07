@@ -54,7 +54,7 @@ export const PROGRAM = [
       { ex: 'plank', sets: 2, time: 20, rest: 45 },
       { ex: 'jumping_jack', sets: 2, time: 30, rest: 45 },
     ],
-    daily: 'Drink at least 8 glasses of water today.',
+    daily: 'Drink at least {water} of water today.',
     bonus: 'Complete 10 extra bodyweight squats.',
   }),
   d({
@@ -93,7 +93,7 @@ export const PROGRAM = [
       { ex: 'thoracic_rotation', sets: 2, reps: 6, rest: 15 },
       { ex: 'childs_pose', sets: 1, time: 60, rest: 0 },
     ],
-    daily: 'Drink at least 8 glasses of water today.',
+    daily: 'Drink at least {water} of water today.',
     bonus: 'Take a 20-minute easy walk.',
   }),
   d({
@@ -132,7 +132,7 @@ export const PROGRAM = [
       { ex: 'plank', sets: 3, time: 35, rest: 45 },
       { ex: 'burpee', sets: 2, reps: 5, rest: 60 },
     ],
-    daily: 'Drink at least 8 glasses of water today.',
+    daily: 'Drink at least {water} of water today.',
     bonus: 'Complete 10 extra push-ups (any variation).',
   }),
 
@@ -175,7 +175,7 @@ export const PROGRAM = [
       { ex: 'calf_raise', sets: 3, reps: 15, rest: 30 },
       { ex: 'wall_sit', sets: 2, time: 30, rest: 45 },
     ],
-    daily: 'Drink at least 8 glasses of water today.',
+    daily: 'Drink at least {water} of water today.',
     bonus: 'Hold a 45-second wall sit.',
   }),
   d({
@@ -232,7 +232,7 @@ export const PROGRAM = [
       { ex: 'burpee', sets: 3, reps: 8, rest: 60 },
       { ex: 'plank', sets: 3, time: 45, rest: 45 },
     ],
-    daily: 'Drink at least 8 glasses of water today.',
+    daily: 'Drink at least {water} of water today.',
     bonus: 'Complete 10 extra burpees (any variation).',
   }),
 
@@ -276,7 +276,7 @@ export const PROGRAM = [
       { ex: 'calf_raise', sets: 4, reps: 15, rest: 30 },
       { ex: 'wall_sit', sets: 3, time: 45, rest: 45 },
     ],
-    daily: 'Drink at least 8 glasses of water today.',
+    daily: 'Drink at least {water} of water today.',
     bonus: 'Hold a 60-second wall sit.',
   }),
   d({
@@ -333,7 +333,7 @@ export const PROGRAM = [
       { ex: 'burpee', sets: 4, reps: 10, rest: 60 },
       { ex: 'plank', sets: 3, time: 60, rest: 45 },
     ],
-    daily: 'Drink at least 8 glasses of water today.',
+    daily: 'Drink at least {water} of water today.',
     bonus: 'Complete 10 extra burpees (any variation).',
   }),
 
@@ -392,7 +392,7 @@ export const PROGRAM = [
       { ex: 'wall_sit', sets: 3, time: 60, rest: 60 },
       { ex: 'calf_raise', sets: 4, reps: 20, rest: 30 },
     ],
-    daily: 'Drink at least 8 glasses of water today.',
+    daily: 'Drink at least {water} of water today.',
     bonus: 'Complete 20 extra lunges (10 per side).',
   }),
   d({
@@ -438,7 +438,7 @@ export const PROGRAM = [
       { ex: 'pike_pushup', sets: 4, reps: 8, rest: 60 },
       { ex: 'db_rdl', sets: 4, reps: 12, rest: 60 },
     ],
-    daily: 'Drink at least 8 glasses of water today.',
+    daily: 'Drink at least {water} of water today.',
     bonus: 'Complete 20 additional squats.',
   }),
   d({
@@ -467,7 +467,7 @@ export const PROGRAM = [
       { ex: 'hollow_hold', sets: 4, time: 30, rest: 40 },
       { ex: 'plank', sets: 3, time: 60, rest: 45 },
     ],
-    daily: 'Drink at least 8 glasses of water today.',
+    daily: 'Drink at least {water} of water today.',
     bonus: 'Complete 10 extra burpees (any variation).',
   }),
 

@@ -9,7 +9,14 @@ export const SCHEMA_VERSION = 1;
 export function initialState() {
   return {
     version: SCHEMA_VERSION,
-    profile: { name: '', experience: 'beginner', onboarded: false, createdAt: Date.now() },
+    profile: {
+      name: '',
+      experience: 'beginner',
+      onboarded: false,
+      createdAt: Date.now(),
+      // Body data stays on this device only. Stored in metric; `units` is display preference.
+      body: { age: null, sex: '', weightKg: null, heightCm: null, units: 'metric', weightLog: [], goal: null },
+    },
     xp: 0,
     stats: { STR: 10, END: 10, AGI: 10, VIT: 10 },
     completed: {}, // { [day]: { date, at, xp, seconds, stats, skipped, replays } }
@@ -42,7 +49,11 @@ function migrate(data) {
   return {
     ...base,
     ...data,
-    profile: { ...base.profile, ...(data.profile || {}) },
+    profile: {
+      ...base.profile,
+      ...(data.profile || {}),
+      body: { ...base.profile.body, ...(data.profile?.body || {}) },
+    },
     settings: {
       ...base.settings,
       ...(data.settings || {}),

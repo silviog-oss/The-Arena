@@ -387,3 +387,63 @@
 @media (min-width: 420px) {
   .ach-grid { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* ───────── Body / BMI ───────── */
+.body-form { display: grid; gap: 14px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); }
+.seg button { padding: 10px; border-radius: 9px; font-weight: 700; color: var(--text-2); }
+.seg button.on { background: linear-gradient(135deg, #4d7dff, #7c5cff); color: #fff; }
+.field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field > span:first-child { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.field .input { padding: 12px 10px; text-align: center; font-family: var(--mono); font-weight: 700; }
+.ftin { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ftin .input { padding: 12px 4px; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.bmi-preview { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); }
+.bmi-preview b { font-size: 1.6rem; }
+.bmi-preview.empty b { color: var(--muted); }
+.bmi-tag { margin-left: auto; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 800; border: 1px solid currentColor; }
+.tone-ok { color: var(--ok); }
+.tone-warn { color: var(--warn); }
+.tone-danger { color: var(--danger); }
+.tone-muted { color: var(--text-2); }
+.body-card { display: grid; gap: 12px; }
+.body-empty { display: grid; gap: 12px; }
+.bmi-head { display: flex; justify-content: space-between; align-items: flex-end; }
+.bmi-value { font-size: 2.4rem; font-weight: 900; line-height: 1; }
+.bmi-gauge { padding: 6px 0 14px; }
+.bmi-track { position: relative; height: 10px; border-radius: 99px; overflow: visible; background: var(--line); }
+.bmi-track > span:not(.bmi-pin) { position: absolute; top: 0; bottom: 0; }
+.seg-under { background: rgba(255, 181, 71, 0.55); border-radius: 99px 0 0 99px; }
+.seg-ok { background: rgba(69, 211, 154, 0.75); }
+.seg-over { background: rgba(255, 181, 71, 0.55); }
+.seg-ob { background: rgba(255, 93, 108, 0.6); border-radius: 0 99px 99px 0; }
+.bmi-pin { position: absolute; top: -5px; width: 4px; height: 20px; margin-left: -2px; border-radius: 2px; background: #fff; box-shadow: 0 0 10px rgba(255, 255, 255, 0.8); }
+.bmi-scale { position: relative; height: 14px; font-size: 0.65rem; color: var(--muted); }
+.bmi-scale span { position: absolute; top: 4px; transform: translateX(-50%); }
+.bmi-note { font-size: 0.74rem; color: var(--muted); line-height: 1.4; }
+.kpi-text { font-family: var(--font) !important; font-size: 0.9rem !important; }
+.hunter-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.bmi-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 8px 12px; border-radius: 99px; border: 1px solid var(--line-2); color: var(--text-2); font-size: 0.8rem; font-weight: 700; }
+.bmi-chip b { color: var(--text); font-size: 1rem; }
+.bmi-chip small { color: var(--muted); font-weight: 600; }
+.bmi-chip.add { color: var(--blue-2); border-style: dashed; }
+@media (max-width: 360px) { .field-grid { grid-template-columns: 1fr 1fr; } }
+
+/* ───────── Goal ───────── */
+.input.big { font-size: 1.4rem; padding: 14px; }
+.goal-preview { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 12px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); text-align: center; }
+.goal-preview div { display: grid; }
+.goal-preview small { font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.goal-preview b { font-size: 1.15rem; }
+.goal-preview .arrow { color: var(--blue-2); font-size: 1.3rem; }
+.form-error { color: var(--danger); font-size: 0.85rem; padding: 10px 12px; border-radius: 10px; background: rgba(255, 93, 108, 0.08); border: 1px solid rgba(255, 93, 108, 0.3); }
+.goal-card { display: grid; gap: 10px; }
+.goal-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.goal-target { font-size: 1.8rem; font-weight: 900; display: block; line-height: 1.1; }
+.goal-scale { display: flex; justify-content: space-between; }
+.weight-log { display: grid; gap: 2px; }
+.weight-log li { display: flex; justify-content: space-between; font-size: 0.82rem; padding: 4px 0; border-bottom: 1px solid var(--line); }
+.weigh-in { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.weigh-in .input { font-family: var(--mono); }

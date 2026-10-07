@@ -6,6 +6,7 @@ import { Panel, XPBar, RankBadge, StreakChip, Button, ProgressBar, DifficultyTag
 import { Icon } from '../components/Icons.jsx';
 import QuestList from '../components/QuestList.jsx';
 import { useOnline } from '../hooks/useSystem.js';
+import { bmi, bmiCategory, bodyComplete, goalProgress } from '../lib/body.js';
 
 export default function Home({ nav }) {
   const { state, profile } = useGame();
@@ -36,7 +37,23 @@ export default function Home({ nav }) {
           </div>
         </div>
         <XPBar profile={profile} />
-        <StreakChip n={profile.streak.current} big />
+        <div className="hunter-foot">
+          <StreakChip n={profile.streak.current} big />
+          {bodyComplete(state.profile.body) ? (
+            <button className="bmi-chip" onClick={() => nav.setTab('profile')}>
+              BMI <b className="mono">{bmi(state.profile.body.weightKg, state.profile.body.heightCm)}</b>
+              <small>
+                {goalProgress(state.profile.body)
+                  ? goalProgress(state.profile.body).reached
+                    ? 'Goal reached ✓'
+                    : `Goal ${Math.round(goalProgress(state.profile.body).pct)}%`
+                  : bmiCategory(bmi(state.profile.body.weightKg, state.profile.body.heightCm), state.profile.body.age)?.label}
+              </small>
+            </button>
+          ) : (
+            <button className="bmi-chip add" onClick={() => nav.setTab('profile')}>+ Add BMI</button>
+          )}
+        </div>
       </Panel>
 
       {/* ── Today's mission ── */}

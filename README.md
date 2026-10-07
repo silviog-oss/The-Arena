@@ -19,7 +19,9 @@
   - Four stats: STR, END, AGI, VIT. Each exercise contributes to specific stats.
   - Ranks E → S, earned by level **and** completed work **and** clearing phase trials.
   - 24 achievements.
-- **Quests.** A main quest, an optional daily quest (+25 XP) and an optional bonus quest (+50 XP) every day.
+- **Quests.** A main quest, an optional daily quest (+25 XP) and an optional bonus quest (+50 XP) every day. The water quest is personalized: about 35 ml per kg of body weight, shown in liters and ml (2 L default).
+- **Body profile and BMI.** Age, gender, weight and height (kg/cm or lb/ft-in), with BMI, the WHO category and a gauge. Under-18s are told to use youth percentile charts instead.
+- **Goal weight / goal BMI.** Set a goal either way, log your weight, and see progress, the amount left to lose or gain, and a time estimate at 0.5 kg/week. Goals below a BMI of 18.5 are blocked.
 - **Streaks.** Current and longest streak. Missing a day resets the streak but **never** your program progress.
 - **Exercise library.** 36 movements with muscles, difficulty, equipment, instructions, a safety cue and beginner/standard/advanced variations.
 - **Offline-first PWA.** Everything is precached, and progress lives in localStorage. Export/import backups are available from Profile.
@@ -55,7 +57,7 @@ the-arena/
 │  │  └─ feedback.js          # WebAudio beeps + vibration
 │  ├─ state/GameContext.jsx   # React context + reducer, auto-save
 │  ├─ hooks/useSystem.js      # Reminder scheduler, wake lock, install prompt, online status
-│  ├─ components/             # Logo, Icons, UI kit, QuestList, VariationPicker
+│  ├─ components/             # Logo, Icons, UI kit, QuestList, VariationPicker, Body (BMI + goal)
 │  ├─ screens/                # Onboarding, Home, Missions, MissionDetail, Workout,
 │  │                          # Complete, Stats, Exercises, ExerciseDetail, Profile
 │  └─ styles/                 # base.css (tokens), components.css, screens.css

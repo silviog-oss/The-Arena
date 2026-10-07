@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGame } from '../state/GameContext.jsx';
 import { LogoMark } from '../components/Logo.jsx';
 import { Button, Disclaimer } from '../components/UI.jsx';
+import { BodyForm } from '../components/Body.jsx';
 
 const LEVELS = [
   { id: 'beginner', label: 'New to training', sub: 'Starts with easier variations (wall/knee push-ups, assisted squats).' },
@@ -10,7 +11,7 @@ const LEVELS = [
 ];
 
 export default function Onboarding() {
-  const { actions } = useGame();
+  const { state, actions } = useGame();
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [exp, setExp] = useState('beginner');
@@ -39,7 +40,7 @@ export default function Onboarding() {
 
       {step === 1 && (
         <div className="ob-step">
-          <p className="eyebrow">Step 1 of 2</p>
+          <p className="eyebrow">Step 1 of 3</p>
           <h2>Who enters the Arena?</h2>
           <input
             className="input"
@@ -66,7 +67,25 @@ export default function Onboarding() {
 
       {step === 2 && (
         <div className="ob-step">
-          <p className="eyebrow">Step 2 of 2</p>
+          <p className="eyebrow">Step 2 of 3</p>
+          <h2>Body profile</h2>
+          <p className="muted">Used to calculate your BMI and a daily water target. Stays on this device.</p>
+          <BodyForm
+            initial={state.profile.body}
+            saveLabel="Continue"
+            onSave={(b) => {
+              actions.setBody(b);
+              setStep(3);
+            }}
+            onSkip={() => setStep(3)}
+          />
+          <button className="link-btn" onClick={() => setStep(1)}>Back</button>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="ob-step">
+          <p className="eyebrow">Step 3 of 3</p>
           <h2>Before you start</h2>
           <Disclaimer />
           <ul className="ob-points small">
@@ -86,7 +105,7 @@ export default function Onboarding() {
           >
             Enter The Arena
           </Button>
-          <button className="link-btn" onClick={() => setStep(1)}>
+          <button className="link-btn" onClick={() => setStep(2)}>
             Back
           </button>
         </div>

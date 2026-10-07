@@ -13,12 +13,16 @@ import {
   ScreenHeader, Panel, XPBar, RankBadge, ProgressBar, StatBar, Toggle, Button, Sheet, Disclaimer,
 } from '../components/UI.jsx';
 import { LogoMark } from '../components/Logo.jsx';
+import { BodyForm, BodyCard, GoalCard, GoalForm } from '../components/Body.jsx';
+import { bodyComplete } from '../lib/body.js';
 
 export default function Profile({ nav }) {
   const { state, profile, actions } = useGame();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(state.profile.name);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [bodyOpen, setBodyOpen] = useState(false);
+  const [goalOpen, setGoalOpen] = useState(false);
   const [perm, setPerm] = useState(permission());
   const fileRef = useRef();
   const install = useInstallPrompt();
@@ -131,6 +135,23 @@ export default function Profile({ nav }) {
         <ProgressBar value={profile.daysDone} max={TOTAL_DAYS} label="31-day progress" />
       </Panel>
 
+      <Panel title="Body">
+        <BodyCard body={state.profile.body} onEdit={() => setBodyOpen(true)} />
+      </Panel>
+
+      {bodyComplete(state.profile.body) && (
+        <Panel title="Goal">
+          <GoalCard
+            body={state.profile.body}
+            onSetGoal={() => setGoalOpen(true)}
+            onLog={(kg) => {
+              actions.setBody({ weightKg: kg });
+              nav.showToast({ icon: '✓', title: 'Weight logged' });
+            }}
+          />
+        </Panel>
+      )}
+
       <Panel title="Attributes">
         {STAT_KEYS.map((k) => (
           <StatBar key={k} k={k} value={state.stats[k]} max={maxStat} />
@@ -227,6 +248,34 @@ export default function Profile({ nav }) {
         <LogoMark size={36} />
         <span>The Arena · v1.0 · Works offline</span>
       </footer>
+
+      <Sheet open={bodyOpen} onClose={() => setBodyOpen(false)} title="Body profile">
+        <BodyForm
+          initial={state.profile.body}
+          onSave={(b) => {
+            actions.setBody(b);
+            setBodyOpen(false);
+            nav.showToast({ icon: '✓', title: 'Body profile saved' });
+          }}
+        />
+      </Sheet>
+
+      <Sheet open={goalOpen} onClose={() => setGoalOpen(false)} title="Your goal">
+        {bodyComplete(state.profile.body) && (
+          <GoalForm
+            body={state.profile.body}
+            onSave={(goal) => {
+              actions.setBody({ goal });
+              setGoalOpen(false);
+              nav.showToast({ icon: '◎', title: 'Goal set', body: 'Log your weight to track progress.' });
+            }}
+            onClear={() => {
+              actions.setBody({ goal: null });
+              setGoalOpen(false);
+            }}
+          />
+        )}
+      </Sheet>
 
       <Sheet open={confirmReset} onClose={() => setConfirmReset(false)} title="Reset everything?">
         <p className="muted">This deletes your level, XP, stats, streaks and achievements on this device. It can’t be undone unless you exported a backup.</p>
