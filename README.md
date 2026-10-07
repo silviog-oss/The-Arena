@@ -17,12 +17,17 @@
 - **RPG system**
   - XP and levels: `100·(n−1)² + 400·(n−1)`, so L2 = 500, L3 = 1,200, L4 = 2,100 …
   - Four stats: STR, END, AGI, VIT. Each exercise contributes to specific stats.
-  - Ranks E → S, earned by level **and** completed work **and** clearing phase trials.
+  - Ranks E → A, earned by level **and** completed work **and** clearing phase trials. **S-Rank** needs Level 8, Day 31 cleared and being within 10% of your goal (or reaching it). Without a goal, it needs 2 full cycles plus an improved re-evaluation.
+  - **Mission 0 — Hunter Evaluation.** All stats start at 0. Four tests (push-ups, 60-second squats, plank and balance/reach) set your starting STR/END/VIT/AGI with grades E–S and a recommended starting difficulty. Re-evaluating after a cycle adds your measured improvements to your stats.
   - 24 achievements.
-- **Quests.** A main quest, an optional daily quest (+25 XP) and an optional bonus quest (+50 XP) every day. The water quest is personalized: about 35 ml per kg of body weight, shown in liters and ml (2 L default).
+- **Quests.** Every day has a main quest plus three optional ones: a daily quest (+25 XP), a **food challenge** (+30 XP; e.g. no soda, no added sugar, a vegetable with every meal, rotating through 31 challenges, with a muscle-gain list for gain goals) and a bonus quest (+50 XP). The water quest is personalized: about 35 ml per kg of body weight, shown in liters and ml (2 L default).
 - **Body profile and BMI.** Age, gender, weight and height (kg/cm or lb/ft-in), with BMI, the WHO category and a gauge. Under-18s are told to use youth percentile charts instead.
+- **Variation-based XP.** Each completed set earns XP at the multiplier for the variation you actually used: beginner ×0.8, standard ×1, advanced ×1.25 (skipped sets don't count). Mission screens show the XP for your current choices.
+- **New Game+ cycles.** After Day 31, start Cycle 2, 3 and so on. Each cycle adds +20% reps, +15% timed sets and +15% XP (capped at cycle 3). Level, stats, rank (it never drops), streak, achievements and goal carry over, because real goals usually take longer than 31 days.
+- **Goal pace adapts difficulty.** Choose how fast to lose or gain (Relaxed / Steady / Fast / Max safe). Loss is capped at 1 kg/week and 1% of body weight per week, gain at 0.5 kg/week. You see a realistic timeline and a warning about how the pace changes workouts. Faster paces add sets, shorten rests and give +10–20% XP. Relaxed removes sets and lengthens rests. Gain goals shift volume from cardio to strength. Recovery days never change.
 - **Goal weight / goal BMI.** Set a goal either way, log your weight, and see progress, the amount left to lose or gain, and a time estimate at 0.5 kg/week. Goals below a BMI of 18.5 are blocked.
 - **Streaks.** Current and longest streak. Missing a day resets the streak but **never** your program progress.
+- **"?" help during workouts.** Tap **?** in the workout to see an animated stick-figure demo, your current variation and its cue, step-by-step form instructions and a safety tip. The timer pauses while it's open. Figures also appear in mission lists, the exercise library and the evaluation tests (original illustrations, defined in `src/data/poses.js`).
 - **Exercise library.** 36 movements with muscles, difficulty, equipment, instructions, a safety cue and beginner/standard/advanced variations.
 - **Offline-first PWA.** Everything is precached, and progress lives in localStorage. Export/import backups are available from Profile.
 - **Notifications.** Local reminders (daily mission, streak, mission complete, level/rank up) work now. The Web Push architecture is ready for background delivery (see below).
@@ -40,6 +45,7 @@ the-arena/
 │  ├─ favicon.png
 │  ├─ icons/                  # 192/512/maskable/apple-touch/badge/1024 icons
 │  └─ splash/                 # iPhone launch screens
+├─ docs/                      # ← BUILT APP (what GitHub Pages serves)
 ├─ src/
 │  ├─ main.jsx                # Entry: providers, SW registration, persistent storage
 │  ├─ App.jsx                 # Tab + stack navigation (Android back button aware)
@@ -103,18 +109,25 @@ npm run icons               # regenerate icons from the logo geometry (needs Pyt
 npm run build
 ```
 
-The output goes to `dist/`. It's fully static and uses relative paths, so it works at a domain root or in a sub-folder.
+The output goes to `docs/`. It's fully static and uses relative paths, so it works at a domain root or in a sub-folder.
 
 ## Deploy
 
-**GitHub Pages (recommended)**
+> **Important:** GitHub Pages must serve the **built** app in `/docs`, not the source code. If Pages serves the repo root, the app gets stuck on the logo screen (it now shows a message explaining this).
 
-1. Push the project to a GitHub repo (default branch `main`).
-2. Go to repo **Settings → Pages → Source: GitHub Actions**.
-3. Push to `main`. The included workflow builds and deploys automatically.
-4. Your app will be live at `https://<username>.github.io/<repo>/`.
+**GitHub Pages (simplest, no Actions needed)**
 
-**Any static host** (Netlify, Vercel, Cloudflare Pages, Firebase Hosting): use the build command `npm run build` and output folder `dist`. HTTPS is required for service workers and notifications. Every host above provides it.
+1. Push the whole project to GitHub, including the `docs/` folder.
+2. Go to repo **Settings → Pages → Build and deployment**.
+3. Set **Source: Deploy from a branch**, **Branch: `main`**, **Folder: `/docs`**, then click **Save**.
+4. Wait about a minute. The app will be live at `https://<username>.github.io/<repo>/`.
+5. After changing code, run `npm run build` (it rebuilds `docs/`), then commit and push.
+
+**GitHub Pages via Actions (optional):** set Source to **GitHub Actions**. The included workflow runs `npm run build` on every push and deploys `docs/`.
+
+**Any static host** (Netlify, Vercel, Cloudflare Pages, Firebase Hosting): set the build command to `npm run build` and the publish folder to `docs`. HTTPS is required for service workers and notifications.
+
+**Stuck on the logo after an update?** Use the **Clear cache & reload** button on that screen. Your progress is kept.
 
 ## Install on iPhone
 

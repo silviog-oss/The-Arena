@@ -115,6 +115,6 @@ export function goalProgress(body) {
   const remaining = Math.round((direction === 'lose' ? current - target : target - current) * 10) / 10;
   const reached = direction === 'maintain' ? Math.abs(current - target) <= 1 : remaining <= 0;
   const done = total === 0 ? 1 : Math.max(0, Math.min(1, (total - Math.max(0, remaining)) / total));
-  const weeks = reached ? 0 : Math.ceil(Math.max(0, remaining) / 0.5);
+  const weeks = reached ? 0 : Math.ceil(Math.max(0, remaining) / (g.kgPerWeek || 0.5));
   return { start, target, current, direction, remaining: Math.max(0, remaining), reached, pct: done * 100, weeks, targetBmi: bmi(target, body.heightCm) };
 }

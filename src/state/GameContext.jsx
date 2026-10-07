@@ -1,8 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import { load, save, initialState, importData } from '../lib/storage.js';
-import { completeDay, toggleQuest } from '../lib/game.js';
+import { completeDay, toggleQuest, startNextCycle, completeEvaluation, skipEvaluation } from '../lib/game.js';
 import { deriveProfile, toDateKey } from '../lib/progression.js';
 import { EXERCISE_MAP, defaultVariationIndex } from '../data/exercises.js';
+import { dayFor as adaptedDay, intensityFor } from '../lib/intensity.js';
 
 const GameContext = createContext(null);
 
@@ -91,15 +92,27 @@ export function GameProvider({ children }) {
         dispatch({ type: 'REPLACE', state: r.state });
         return r;
       },
+      completeEvaluation: (payload) => {
+        const { state: next, result } = completeEvaluation(stateRef.current, payload);
+        dispatch({ type: 'REPLACE', state: next });
+        return result;
+      },
+      skipEvaluation: () => dispatch({ type: 'REPLACE', state: skipEvaluation(stateRef.current) }),
+      startNextCycle: () => dispatch({ type: 'REPLACE', state: startNextCycle(stateRef.current) }),
       importBackup: (text) => dispatch({ type: 'REPLACE', state: importData(text) }),
       reset: () => dispatch({ type: 'RESET' }),
     }),
     [],
   );
 
+  const body = state.profile.body;
+  const intensity = useMemo(() => intensityFor(body), [body]);
+  const cycle = state.cycle || 1;
+  const dayFor = useCallback((d) => adaptedDay(d, body, cycle), [body, cycle]);
+
   const value = useMemo(
-    () => ({ state, profile, actions, variationFor }),
-    [state, profile, actions, variationFor],
+    () => ({ state, profile, actions, variationFor, dayFor, intensity }),
+    [state, profile, actions, variationFor, dayFor, intensity],
   );
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 }

@@ -1,0 +1,78 @@
+/**
+ * Daily food challenges — one per program day (optional quest, +30 XP).
+ * Simple, positive habits. No calorie counting, no fasting, no skipping meals.
+ * If the user's goal is to GAIN weight, the "gain" list is used instead.
+ */
+export const FOOD_CHALLENGES = {
+  standard: [
+    'No soda today — water, sparkling water or unsweetened tea only.',
+    'Eat a vegetable with lunch and dinner.',
+    'No added sugar today (sweets, sugary cereal, sweetened coffee).',
+    'Cook at home instead of ordering takeout.',
+    'Swap dessert for a piece of fruit.',
+    'Protein at breakfast (eggs, yogurt, beans, etc.).',
+    'No fried food today.',
+    'No soda and no juice — whole fruit instead of fruit juice.',
+    'Fill half your plate with vegetables at dinner.',
+    'No snacking after 8 PM.',
+    'Choose whole grains (brown rice, oats, whole-wheat tortillas or bread).',
+    'No fast food today.',
+    'Eat slowly: put your fork down between bites at every meal.',
+    'No sugary drinks — including energy drinks and sweet coffee.',
+    'Pack or prep tomorrow’s lunch tonight.',
+    'Eat 2 different fruits today.',
+    'No candy or chocolate today.',
+    'Add a lean protein to every meal.',
+    'No chips or packaged salty snacks.',
+    'Drink a glass of water before every meal.',
+    'No alcohol today.',
+    'Try a vegetable you don’t usually eat.',
+    'No added sugar today — check the labels.',
+    'Swap white bread or flour tortillas for whole-grain or corn.',
+    'Eat breakfast at home (no pastries or sweet bread).',
+    'No soda, no sweets — a full clean-sugar day.',
+    'Home-cooked dinner with protein + vegetables.',
+    'No eating in front of a screen for one meal.',
+    'Eat 5 servings of fruit and vegetables today.',
+    'No processed meat (hot dogs, sausages, deli ham).',
+    'Plan your meals for the next week.',
+  ],
+  gain: [
+    'Eat 3 full meals today — no skipped meals.',
+    'Add a protein-rich snack between meals (yogurt, nuts, a sandwich).',
+    'Protein at breakfast (eggs, yogurt, beans, etc.).',
+    'Add a handful of nuts or seeds to one meal.',
+    'No soda today — choose milk, water or a smoothie.',
+    'Eat a carb + protein meal within 2 hours after training.',
+    'Add an extra serving of rice, oats or potatoes at lunch.',
+    'Eat a vegetable with lunch and dinner.',
+    'Have a homemade smoothie (fruit, milk/yogurt, oats, peanut butter).',
+    'Add avocado or olive oil to a meal.',
+    'No skipping breakfast.',
+    'Add a lean protein to every meal.',
+    'Eat a bedtime snack with protein (cottage cheese, milk, yogurt).',
+    'Cook at home instead of ordering takeout.',
+    'No fast food — get calories from real food.',
+    'Eat 2 different fruits today.',
+    'Add beans or lentils to a meal.',
+    'Eat 4 meals or snacks today.',
+    'No sugary drinks — real food calories only.',
+    'Prep tomorrow’s lunch tonight.',
+    'Add an extra egg or extra serving of protein at breakfast.',
+    'No alcohol today.',
+    'Whole grains today (brown rice, oats, whole-wheat bread).',
+    'Eat a big salad with protein on top.',
+    'Add cheese, nuts or seeds to a snack.',
+    'Eat 5 servings of fruit and vegetables today.',
+    'Home-cooked dinner with protein + carbs + vegetables.',
+    'No eating in front of a screen for one meal.',
+    'Try a new high-protein recipe.',
+    'Drink a glass of milk or a smoothie with a meal.',
+    'Plan your meals for the next week.',
+  ],
+};
+
+export function foodChallenge(day, body) {
+  const list = body?.goal?.direction === 'gain' ? FOOD_CHALLENGES.gain : FOOD_CHALLENGES.standard;
+  return list[(day - 1) % list.length];
+}

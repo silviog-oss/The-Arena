@@ -15,6 +15,8 @@ import {
 import { LogoMark } from '../components/Logo.jsx';
 import { BodyForm, BodyCard, GoalCard, GoalForm } from '../components/Body.jsx';
 import { bodyComplete } from '../lib/body.js';
+import { retestAvailable, gradeFor } from '../lib/evaluation.js';
+import { STAT_INFO } from '../lib/progression.js';
 
 export default function Profile({ nav }) {
   const { state, profile, actions } = useGame();
@@ -125,14 +127,41 @@ export default function Profile({ nav }) {
           <div className="kpi"><small>Next level</small><b>{profile.toNext.toLocaleString()} XP</b></div>
           <div className="kpi"><small>Streak</small><b>🔥 {profile.streak.current}</b></div>
           <div className="kpi"><small>Longest</small><b>{profile.streak.longest}</b></div>
-          <div className="kpi"><small>Workouts</small><b>{profile.daysDone}</b></div>
+          <div className="kpi"><small>Workouts</small><b>{profile.totalWorkouts}</b></div>
           <div className="kpi"><small>Time trained</small><b>{profile.totalMinutes}m</b></div>
         </div>
         <div className="prog-line">
-          <span className="small muted">31-day progress</span>
+          <span className="small muted">{profile.cycle > 1 ? `Cycle ${profile.cycle} progress` : '31-day progress'}</span>
           <span className="mono small">{profile.daysDone}/{TOTAL_DAYS}</span>
         </div>
         <ProgressBar value={profile.daysDone} max={TOTAL_DAYS} label="31-day progress" />
+      </Panel>
+
+      <Panel title="Evaluation" action={<span className="mono muted">{profile.evaluations.length} taken</span>}>
+        {profile.evaluations.length === 0 ? (
+          <>
+            <p className="muted small">Mission 0 measures your starting STR, END, VIT and AGI.</p>
+            <Button className="w-full" onClick={() => nav.push({ name: 'evaluation' })}>Take evaluation</Button>
+          </>
+        ) : (
+          <>
+            <ul className="eval-history">
+              {profile.evaluations.slice(-3).map((e) => (
+                <li key={e.at}>
+                  <span className="mono muted">{e.date}</span>
+                  {Object.entries(e.scores).map(([k, v]) => (
+                    <span key={k} className="eh-stat"><b style={{ color: STAT_INFO[k].color }}>{k}</b> {v}<i className={`diff diff-${gradeFor(v)}`}>{gradeFor(v)}</i></span>
+                  ))}
+                </li>
+              ))}
+            </ul>
+            {retestAvailable(state, profile) ? (
+              <Button className="w-full" onClick={() => nav.push({ name: 'evaluation' })}>Re-evaluate (+75 XP)</Button>
+            ) : (
+              <p className="muted small">Re-evaluation unlocks 14 days after your last test or when you finish a cycle.</p>
+            )}
+          </>
+        )}
       </Panel>
 
       <Panel title="Body">

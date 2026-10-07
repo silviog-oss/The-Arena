@@ -18,7 +18,15 @@ export function initialState() {
       body: { age: null, sex: '', weightKg: null, heightCm: null, units: 'metric', weightLog: [], goal: null },
     },
     xp: 0,
-    stats: { STR: 10, END: 10, AGI: 10, VIT: 10 },
+    cycle: 1, // New Game+ cycle number
+    pastDates: [], // workout dates from finished cycles (keeps streaks)
+    pastWorkouts: 0,
+    pastQuests: { total: 0, daily: 0, food: 0 },
+    rankFloor: 0, // rank index kept when a new cycle starts
+    cycles: [], // [{ cycle, finishedAt, xp }]
+    stats: { STR: 0, END: 0, AGI: 0, VIT: 0 }, // set by Mission 0 (evaluation)
+    evaluations: [], // [{ at, date, kind: 'initial'|'retest', raw, scores }]
+    evalSkipped: false,
     completed: {}, // { [day]: { date, at, xp, seconds, stats, skipped, replays } }
     quests: {}, // { [day]: { daily: bool, bonus: bool } }
     totalSeconds: 0,
@@ -45,6 +53,10 @@ export function initialState() {
 
 function migrate(data) {
   const base = initialState();
+  // Users from before Mission 0 existed keep their stats and aren't blocked.
+  if (data && !('evaluations' in data) && (data.xp > 0 || Object.keys(data.completed || {}).length)) {
+    data = { ...data, evaluations: [], evalSkipped: true };
+  }
   // Shallow-merge so new fields added in later versions get defaults.
   return {
     ...base,

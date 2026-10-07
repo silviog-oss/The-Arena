@@ -4,16 +4,20 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 /**
- * After the build, inject the full list of emitted files into dist/sw.js
+ * After the build, inject the full list of emitted files into docs/sw.js
  * so the service worker can precache the whole app for offline use.
  * Also stamps a build version so old caches are cleaned up on update.
  */
+// Built app goes to /docs so GitHub Pages can serve it directly
+// (Settings → Pages → Deploy from a branch → main → /docs).
+const OUT_DIR = 'docs';
+
 function precacheManifest() {
   return {
     name: 'precache-manifest',
     apply: 'build',
     closeBundle() {
-      const dist = path.resolve('dist');
+      const dist = path.resolve(OUT_DIR);
       const swPath = path.join(dist, 'sw.js');
       if (!fs.existsSync(swPath)) return;
       const files = [];
@@ -45,5 +49,5 @@ export default defineConfig({
   // Relative base so the build works on GitHub Pages sub-paths and any static host.
   base: './',
   plugins: [react(), precacheManifest()],
-  build: { outDir: 'dist', sourcemap: false },
+  build: { outDir: OUT_DIR, emptyOutDir: true, sourcemap: false },
 });

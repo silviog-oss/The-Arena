@@ -1,6 +1,6 @@
 import { useGame } from '../state/GameContext.jsx';
 import { DAY_MAP, TOTAL_DAYS, TYPE_LABEL, phaseForDay } from '../data/program.js';
-import { estimateMinutes } from '../lib/progression.js';
+import { estimateMinutes, rankRequirements } from '../lib/progression.js';
 import { Wordmark } from '../components/Logo.jsx';
 import { Panel, XPBar, RankBadge, StreakChip, Button, ProgressBar, DifficultyTag, Pill } from '../components/UI.jsx';
 import { Icon } from '../components/Icons.jsx';
@@ -9,12 +9,12 @@ import { useOnline } from '../hooks/useSystem.js';
 import { bmi, bmiCategory, bodyComplete, goalProgress } from '../lib/body.js';
 
 export default function Home({ nav }) {
-  const { state, profile } = useGame();
+  const { state, profile, dayFor, intensity, actions } = useGame();
   const online = useOnline();
   const name = state.profile.name || 'Hunter';
   const active = state.activeWorkout;
   const day = active?.day || profile.nextDay;
-  const mission = day ? DAY_MAP[day] : null;
+  const mission = day ? dayFor(day) : null;
   const phase = mission ? phaseForDay(mission.day) : null;
 
   return (
@@ -57,13 +57,44 @@ export default function Home({ nav }) {
       </Panel>
 
       {/* ── Today's mission ── */}
-      {profile.programComplete && !active ? (
-        <Panel title="Program complete" glow>
+      {!profile.evaluated && !active ? (
+        <Panel title="Your first mission" glow className="today-card">
+          <div className="today-meta">
+            <span className="day-chip">MISSION 0</span>
+            <span className="muted small">Evaluation · ~10 min</span>
+          </div>
+          <h2 className="mission-title">“Hunter Evaluation”</h2>
+          <p className="muted">Your stats start at 0. Four short tests measure your strength, endurance, vitality and agility, then set your starting stats and difficulty.</p>
+          <div className="today-facts">
+            <span><Icon name="bolt" size={16} /> +50 XP</span>
+            <span>Unlocks Day 1</span>
+          </div>
+          <Button size="lg" className="w-full" icon="play" onClick={() => nav.push({ name: 'evaluation' })}>
+            Start evaluation
+          </Button>
+        </Panel>
+      ) : profile.programComplete && !active ? (
+        <Panel title={`Cycle ${profile.cycle} complete`} glow>
           <p className="muted">
-            You cleared all 31 missions. Replay any mission from the Missions tab to keep training — or start a new
-            cycle from Profile.
+            You cleared all 31 missions. Real progress takes longer than a month — keep going with
+            <b> Cycle {profile.cycle + 1}</b>.
           </p>
-          <Button className="w-full" onClick={() => nav.setTab('missions')}>View missions</Button>
+          <ul className="ngplus">
+            <li>+{profile.cycle >= 3 ? 'max' : '20%'} reps, longer timed sets</li>
+            <li>+{profile.cycle >= 3 ? 'max' : '15%'} XP per mission</li>
+            <li>Your level, rank, stats, streak, achievements and goal carry over</li>
+          </ul>
+          {goalProgress(state.profile.body) && !goalProgress(state.profile.body).reached && (
+            <p className="note small">
+              Goal: about {goalProgress(state.profile.body).weeks} more weeks at your pace — that’s roughly{' '}
+              {Math.max(1, Math.ceil((goalProgress(state.profile.body).weeks * 7) / 31))} more cycle
+              {Math.ceil((goalProgress(state.profile.body).weeks * 7) / 31) > 1 ? 's' : ''}.
+            </p>
+          )}
+          <Button size="lg" className="w-full" icon="play" onClick={() => { actions.startNextCycle(); nav.showToast({ icon: '∞', title: `Cycle ${profile.cycle + 1} begins`, body: 'New Game+ — missions are harder now.' }); }}>
+            Begin Cycle {profile.cycle + 1}
+          </Button>
+          <Button variant="ghost" className="w-full mt8" onClick={() => nav.setTab('missions')}>Replay missions instead</Button>
         </Panel>
       ) : (
         mission && (
@@ -83,6 +114,9 @@ export default function Home({ nav }) {
               <span><Icon name="bolt" size={16} /> +{mission.xp} XP</span>
               <span>{phase?.name}</span>
             </div>
+            {intensity.id !== 'normal' && mission.type !== 'mobility' && (
+              <p className={`adapt-line tone-${intensity.tone}`}>Adapted to your goal pace · {intensity.label} difficulty</p>
+            )}
             {profile.doneToday && !active && (
               <p className="note">✓ You already trained today. Recovery is part of the program — but you can continue if you feel good.</p>
             )}
@@ -103,7 +137,10 @@ export default function Home({ nav }) {
       )}
 
       {/* ── 31-day progress ── */}
-      <Panel title="31-day progress" action={<span className="mono muted">Day {profile.daysDone} / {TOTAL_DAYS}</span>}>
+      <Panel
+        title={profile.cycle > 1 ? `Cycle ${profile.cycle} progress` : '31-day progress'}
+        action={<span className="mono muted">Day {profile.daysDone} / {TOTAL_DAYS}</span>}
+      >
         <ProgressBar value={profile.daysDone} max={TOTAL_DAYS} height={10} label="Program progress" />
         <div className="mini-grid" aria-hidden="true">
           {Array.from({ length: TOTAL_DAYS }, (_, i) => i + 1).map((d) => (
@@ -129,14 +166,15 @@ export default function Home({ nav }) {
             <div>
               <b>{profile.next.name}</b>
               <ul className="req-list">
-                <li className={profile.level >= profile.next.minLevel ? 'ok' : ''}>Reach Level {profile.next.minLevel}</li>
-                <li className={profile.daysDone >= profile.next.minWorkouts ? 'ok' : ''}>{profile.next.minWorkouts} missions completed</li>
-                {profile.next.trial && (
-                  <li className={profile.completedDays.has(profile.next.trial) ? 'ok' : ''}>
-                    Clear Day {profile.next.trial}: {DAY_MAP[profile.next.trial].title}
+                {rankRequirements(profile.next, profile.rankCtx).map((q) => (
+                  <li key={q.label} className={q.ok ? 'ok' : ''}>
+                    {q.day ? `${q.label}: ${DAY_MAP[q.day].title}` : q.label}
                   </li>
-                )}
+                ))}
               </ul>
+              {profile.next.id === 'S' && !profile.rankCtx.goal && (
+                <button className="link-btn small" onClick={() => nav.setTab('profile')}>Set a goal in Profile →</button>
+              )}
             </div>
           </div>
         </Panel>

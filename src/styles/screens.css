@@ -447,3 +447,89 @@
 .weight-log li { display: flex; justify-content: space-between; font-size: 0.82rem; padding: 4px 0; border-bottom: 1px solid var(--line); }
 .weigh-in { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
 .weigh-in .input { font-family: var(--mono); }
+
+/* ───────── Goal pace / intensity ───────── */
+.pace-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); gap: 8px; }
+.pace { display: grid; gap: 2px; justify-items: center; padding: 12px 6px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--panel); position: relative; }
+.pace small { color: var(--text-2); font-size: 0.72rem; }
+.pace i { font-style: normal; font-size: 0.58rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ok); }
+.pace.on { border-color: var(--blue); box-shadow: var(--glow); background: var(--panel-2); }
+.pace:disabled { opacity: 0.35; }
+.pace-card { display: grid; gap: 8px; padding: 14px; border-radius: 14px; background: var(--bg-2); border: 1px solid var(--line-2); }
+.pace-row { display: flex; justify-content: space-between; gap: 10px; font-size: 0.86rem; }
+.pace-row span { color: var(--muted); }
+.pace-warning { font-size: 0.84rem; line-height: 1.4; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid currentColor; }
+.pace-warning.tone-muted { color: var(--text-2); border-color: var(--line-2); }
+.tone-border-ok { border-color: rgba(69, 211, 154, 0.45); }
+.tone-border-warn { border-color: rgba(255, 181, 71, 0.45); }
+.tone-border-danger { border-color: rgba(255, 93, 108, 0.5); }
+.tone-border-muted { border-color: var(--line-2); }
+.pace-chip { display: flex; justify-content: space-between; gap: 8px; font-size: 0.82rem; color: var(--muted); padding: 8px 12px; border-radius: 10px; background: var(--bg-2); border: 1px solid var(--line); }
+.pace-chip b { color: var(--text); }
+.adapt-line { font-size: 0.78rem; font-weight: 700; margin: -4px 0 10px; }
+.adapt-note b { font-weight: 800; }
+.set-delta { margin-left: 6px; font-size: 0.7rem; padding: 1px 5px; border-radius: 6px; font-weight: 800; }
+.set-delta.up { color: var(--warn); background: rgba(255, 181, 71, 0.12); }
+.set-delta.down { color: var(--ok); background: rgba(69, 211, 154, 0.12); }
+
+.quest-kind { display: inline-block; }
+
+/* ───────── Variation XP / cycles ───────── */
+.xp-mult { font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 99px; border: 1px solid currentColor; }
+.xp-mult.up, .xp-mult-line.up { color: var(--violet-2); }
+.xp-mult.down, .xp-mult-line.down { color: var(--text-2); }
+.xp-mult-line { margin-top: -4px; font-weight: 700; }
+.ngplus { display: grid; gap: 6px; margin: 12px 0; font-size: 0.88rem; color: var(--text-2); }
+.ngplus li::before { content: '◆ '; color: var(--violet-2); font-size: 0.7rem; }
+.cycle-note { color: var(--blue-2); padding: 8px 10px; border-radius: 10px; background: rgba(91, 140, 255, 0.08); }
+.mt8 { margin-top: 8px; }
+
+/* ───────── Evaluation ───────── */
+.eval-hero { display: grid; justify-items: center; text-align: center; gap: 10px; }
+.eval-hero h2 { font-size: 1.3rem; }
+.eval-list { display: grid; gap: 8px; margin-bottom: 10px; }
+.eval-list b { display: inline-block; width: 44px; font-family: var(--mono); }
+.stepper { display: grid; grid-template-columns: 52px 52px 1fr 52px 52px; gap: 6px; align-items: center; }
+.stepper button { height: 56px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line-2); font-weight: 800; font-family: var(--mono); display: grid; place-items: center; }
+.stepper button:active { transform: scale(0.95); }
+.stepper-val { display: grid; justify-items: center; line-height: 1; }
+.stepper-val b { font-size: 2.2rem; }
+.stepper-val small { color: var(--muted); font-size: 0.72rem; margin-top: 4px; }
+.test-timer { display: grid; gap: 10px; margin: 12px 0; }
+.tt-dial { display: grid; justify-items: center; padding: 18px; border-radius: 16px; background: var(--bg-2); border: 1px solid var(--line); }
+.tt-dial b { font-size: 3.4rem; line-height: 1; }
+.tt-dial small { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; margin-top: 6px; }
+.tt-dial.run { border-color: var(--blue); box-shadow: var(--glow); }
+.tt-dial.prep b { color: var(--warn); }
+.tt-dial.done b { color: var(--ok); }
+.eval-scores { display: grid; gap: 8px; margin: 12px 0; }
+.eval-scores li { display: grid; grid-template-columns: 44px 1fr auto 70px 40px; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 10px; background: var(--bg-2); }
+.es-key { font-family: var(--mono); font-weight: 900; }
+.es-name { color: var(--text-2); font-size: 0.9rem; }
+.eval-scores b { text-align: right; font-size: 1.2rem; }
+.eval-scores b small { color: var(--muted); font-size: 0.7rem; }
+.es-delta { font-family: var(--mono); font-weight: 800; color: var(--muted); font-size: 0.85rem; text-align: right; }
+.es-delta.up { color: var(--ok); }
+.eval-history { display: grid; gap: 8px; margin-bottom: 12px; }
+.eval-history li { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 0.82rem; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.eh-stat { display: inline-flex; gap: 4px; align-items: center; }
+.eh-stat i { font-style: normal; transform: scale(0.85); }
+
+/* ───────── Exercise figures & help ───────── */
+.ex-figure { display: block; max-width: 100%; height: auto; }
+.fig-floor { stroke: var(--line-2); stroke-width: 0.8; }
+.fig-wall { stroke: var(--line-2); stroke-width: 1.2; stroke-dasharray: 2 1.5; }
+.fig-body path, .fig-far path { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+.fig-far path { opacity: 0.38; }
+.fig-head { fill: none; stroke-width: 2.6; }
+.fig-db rect { fill: #cfd6ff; }
+.fig-wrap { display: grid; place-items: center; padding: 10px; border-radius: 14px; background: radial-gradient(80% 90% at 50% 60%, rgba(91, 108, 255, 0.12), transparent 70%), var(--bg-2); border: 1px solid var(--line); }
+.ex-help { display: grid; gap: 10px; }
+.help-variation { display: grid; gap: 2px; padding: 12px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); }
+.help-variation b { font-size: 1.05rem; }
+.help-muscles { margin-top: 2px; }
+.help-btn { font-size: 1.2rem; font-weight: 900; color: var(--blue-2); border-color: rgba(110, 168, 255, 0.4); }
+.next-fig { margin: 8px auto -4px; padding: 4px 10px; border-radius: 14px; background: var(--bg-2); border: 1px solid var(--line); }
+.ex-thumb { display: inline-grid; place-items: center; width: 64px; height: 44px; border-radius: 10px; background: var(--bg-2); border: 1px solid var(--line); flex: none; overflow: hidden; }
+.ex-name { gap: 10px !important; }
+.help-dot { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 4px; border-radius: 50%; font-size: 0.7rem; font-weight: 900; color: var(--blue-2); border: 1.5px solid currentColor; vertical-align: 1px; }

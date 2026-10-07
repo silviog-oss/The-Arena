@@ -12,6 +12,7 @@ import Stats from './screens/Stats.jsx';
 import Exercises from './screens/Exercises.jsx';
 import ExerciseDetail from './screens/ExerciseDetail.jsx';
 import Profile from './screens/Profile.jsx';
+import Evaluation from './screens/Evaluation.jsx';
 
 const TAB_KEY = 'arena.tab';
 
@@ -90,6 +91,9 @@ export default function App() {
         break;
       case 'complete':
         view = <Complete result={top.result} nav={nav} />;
+        break;
+      case 'evaluation':
+        view = <Evaluation nav={nav} />;
         break;
       case 'exercise':
         view = <ExerciseDetail id={top.id} nav={nav} />;

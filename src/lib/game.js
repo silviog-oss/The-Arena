@@ -2,9 +2,11 @@
  * Pure game-logic functions: state in → new state (+ result) out.
  * No React here, which keeps the rules easy to test and reuse.
  */
-import { DAY_MAP, QUEST_XP } from '../data/program.js';
+import { QUEST_XP } from '../data/program.js';
+import { dayFor } from './intensity.js';
 import { ACHIEVEMENTS } from '../data/achievements.js';
-import { deriveProfile, statGainsForDay, toDateKey, STAT_KEYS } from './progression.js';
+import { scoreEvaluation, recommendedExperience, EVAL_XP } from './evaluation.js';
+import { deriveProfile, statGainsForDay, toDateKey, STAT_KEYS, variationMultiplier, RANKS } from './progression.js';
 
 /** Returns ids of newly unlocked achievements and the updated map. */
 export function evaluateAchievements(state, last = null, today = toDateKey()) {
@@ -29,8 +31,9 @@ export function evaluateAchievements(state, last = null, today = toDateKey()) {
  * Complete a day's main quest.
  * First completion grants XP + stats. Replays only add training time.
  */
-export function completeDay(state, { day, seconds = 0, skipped = 0, now = new Date() }) {
-  const def = DAY_MAP[day];
+export function completeDay(state, { day, seconds = 0, skipped = 0, levels = null, now = new Date() }) {
+  const def = dayFor(day, state.profile.body, state.cycle || 1); // adapted to goal pace + cycle
+  const varMult = levels ? variationMultiplier(levels) : 1;
   const today = toDateKey(now);
   const before = deriveProfile(state, today);
   const already = !!state.completed[day];
@@ -43,7 +46,7 @@ export function completeDay(state, { day, seconds = 0, skipped = 0, now = new Da
     const c = state.completed[day];
     next.completed = { ...state.completed, [day]: { ...c, replays: (c.replays || 0) + 1 } };
   } else {
-    xpGain = def.xp;
+    xpGain = Math.max(5, Math.round((def.xp * varMult) / 5) * 5);
     statGain = statGainsForDay(def);
     const stats = { ...state.stats };
     for (const k of STAT_KEYS) stats[k] += statGain[k];
@@ -75,6 +78,9 @@ export function completeDay(state, { day, seconds = 0, skipped = 0, now = new Da
       title: def.title,
       replay: already,
       xp: xpGain,
+      baseXp: def.xp,
+      varMult,
+      cycle: state.cycle || 1,
       stats: statGain,
       seconds,
       levelBefore: before.level,
@@ -102,4 +108,78 @@ export function toggleQuest(state, day, kind) {
   const { achievements, fresh } = evaluateAchievements(next);
   next.achievements = achievements;
   return { state: next, delta, fresh, levelUp: deriveProfile(next).level > levelBefore };
+}
+
+/**
+ * Start the next cycle (New Game+). Keeps XP, level, stats, achievements,
+ * rank (as a floor), streak history and body/goal data. Resets day progress.
+ */
+export function startNextCycle(state, now = new Date()) {
+  const p = deriveProfile(state);
+  if (!p.programComplete) return state;
+  const dates = Object.values(state.completed).map((c) => c.date);
+  const q = Object.values(state.quests);
+  const past = state.pastQuests || { total: 0, daily: 0, food: 0 };
+  const next = {
+    ...state,
+    cycle: (state.cycle || 1) + 1,
+    pastDates: [...(state.pastDates || []), ...dates].slice(-800),
+    pastWorkouts: (state.pastWorkouts || 0) + p.daysDone,
+    pastQuests: {
+      total: past.total + q.reduce((n, x) => n + (x.daily ? 1 : 0) + (x.food ? 1 : 0) + (x.bonus ? 1 : 0), 0),
+      daily: past.daily + q.filter((x) => x.daily).length,
+      food: past.food + q.filter((x) => x.food).length,
+    },
+    rankFloor: Math.max(state.rankFloor || 0, RANKS.indexOf(p.rank)),
+    cycles: [...(state.cycles || []), { cycle: state.cycle || 1, finishedAt: now.getTime(), xp: state.xp }],
+    completed: {},
+    quests: {},
+    activeWorkout: null,
+  };
+  const { achievements } = evaluateAchievements(next, null, toDateKey(now));
+  next.achievements = achievements;
+  return next;
+}
+
+/**
+ * Mission 0 — record an evaluation.
+ * Initial: scores become the starting stats. Retest: improvements over the
+ * previous test are added to stats ("breakthroughs").
+ */
+export function completeEvaluation(state, { raw, applyExperience = true, now = new Date() }) {
+  const list = state.evaluations || [];
+  const kind = list.length ? 'retest' : 'initial';
+  const scores = scoreEvaluation(raw);
+  const prev = list[list.length - 1]?.scores || null;
+  const before = deriveProfile(state, toDateKey(now));
+  const stats = { ...state.stats };
+  const gains = { STR: 0, END: 0, AGI: 0, VIT: 0 };
+  for (const k of STAT_KEYS) {
+    gains[k] = kind === 'initial' ? scores[k] : Math.max(0, scores[k] - (prev?.[k] || 0));
+    stats[k] += gains[k];
+  }
+  const xp = EVAL_XP[kind];
+  const recommended = recommendedExperience(raw);
+  let next = {
+    ...state,
+    xp: state.xp + xp,
+    stats,
+    evalSkipped: false,
+    evaluations: [...list, { at: now.getTime(), date: toDateKey(now), kind, raw, scores }],
+  };
+  if (kind === 'initial' && applyExperience) {
+    next = { ...next, profile: { ...next.profile, experience: recommended }, settings: { ...next.settings, variations: {} } };
+  }
+  const { achievements, fresh } = evaluateAchievements(next, null, toDateKey(now));
+  next.achievements = achievements;
+  const after = deriveProfile(next, toDateKey(now));
+  return {
+    state: next,
+    result: { kind, scores, prev, gains, xp, recommended, levelBefore: before.level, levelAfter: after.level },
+  };
+}
+
+/** Skip Mission 0: neutral starting stats so the program can begin. */
+export function skipEvaluation(state) {
+  return { ...state, evalSkipped: true, stats: { STR: 5, END: 5, AGI: 5, VIT: 5 } };
 }

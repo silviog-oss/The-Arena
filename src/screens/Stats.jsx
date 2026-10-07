@@ -68,13 +68,13 @@ export default function Stats({ nav }) {
       <div className="kpi-grid">
         <div className="kpi"><small>Current streak</small><b>🔥 {profile.streak.current}</b></div>
         <div className="kpi"><small>Longest streak</small><b>{profile.streak.longest}</b></div>
-        <div className="kpi"><small>Workouts</small><b>{profile.daysDone}</b></div>
+        <div className="kpi"><small>Workouts</small><b>{profile.totalWorkouts}</b></div>
         <div className="kpi"><small>Total XP</small><b>{state.xp.toLocaleString()}</b></div>
         <div className="kpi"><small>Training time</small><b>{profile.totalMinutes} min</b></div>
         <div className="kpi"><small>Quests done</small><b>{profile.questCount}</b></div>
       </div>
 
-      <Panel title="31-day board" action={<span className="mono muted">{profile.daysDone}/{TOTAL_DAYS}</span>}>
+      <Panel title={profile.cycle > 1 ? `Cycle ${profile.cycle} board` : '31-day board'} action={<span className="mono muted">{profile.daysDone}/{TOTAL_DAYS}</span>}>
         <div className="board">
           {Array.from({ length: TOTAL_DAYS }, (_, i) => i + 1).map((d) => {
             const done = profile.completedDays.has(d);
@@ -108,7 +108,9 @@ export default function Stats({ nav }) {
                 <div>
                   <b>{r.name} — {r.title}</b>
                   <small className="muted">
-                    Lv {r.minLevel}+ · {r.minWorkouts} missions{r.trial ? ` · clear Day ${r.trial}` : ''}
+                    {r.special === 'goal'
+                      ? `Lv ${r.minLevel}+ · clear Day 31 · within 10% of your goal`
+                      : `Lv ${r.minLevel}+ · ${r.minWorkouts} missions${r.trial ? ` · clear Day ${r.trial}` : ''}`}
                   </small>
                 </div>
               </li>

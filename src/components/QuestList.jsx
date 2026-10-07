@@ -3,11 +3,14 @@ import { DAY_MAP, QUEST_XP } from '../data/program.js';
 import { Icon } from './Icons.jsx';
 import { notify, MESSAGES } from '../lib/notifications.js';
 import { questText } from '../lib/body.js';
+import { foodChallenge } from '../data/food.js';
 
-/** Main / daily / bonus quests for a day. Optional quests toggle XP on/off. */
+const LABEL = { daily: 'Daily quest', food: 'Food challenge', bonus: 'Bonus quest' };
+
+/** Main / daily / food / bonus quests for a day. Optional quests toggle XP on/off. */
 export default function QuestList({ day, nav }) {
-  const { state, profile, actions } = useGame();
-  const def = DAY_MAP[day];
+  const { state, profile, actions, dayFor } = useGame();
+  const def = dayFor(day);
   const q = state.quests[day] || {};
   const mainDone = profile.completedDays.has(day);
 
@@ -33,13 +36,13 @@ export default function QuestList({ day, nav }) {
         </div>
         <span className="quest-xp">+{def.xp}</span>
       </li>
-      {['daily', 'bonus'].map((kind) => (
+      {['daily', 'food', 'bonus'].map((kind) => (
         <li key={kind}>
           <button className={`quest ${q[kind] ? 'done' : ''}`} onClick={() => toggle(kind)} aria-pressed={!!q[kind]}>
             <span className="quest-check">{q[kind] && <Icon name="check" size={16} />}</span>
             <div>
-              <span className="quest-kind">{kind === 'daily' ? 'Daily quest' : 'Bonus quest'} · optional</span>
-              <p>{questText(def[kind], state.profile.body)}</p>
+              <span className="quest-kind">{LABEL[kind]} · optional</span>
+              <p>{kind === 'food' ? foodChallenge(day, state.profile.body) : questText(def[kind], state.profile.body)}</p>
             </div>
             <span className="quest-xp">+{QUEST_XP[kind]}</span>
           </button>

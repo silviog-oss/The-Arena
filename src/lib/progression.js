@@ -1,5 +1,6 @@
 import { EXERCISE_MAP } from '../data/exercises.js';
 import { WARMUP, QUEST_XP, TOTAL_DAYS } from '../data/program.js';
+import { goalProgress } from './body.js';
 
 /* ─────────────────────────── LEVELS ───────────────────────────
  * XP needed to REACH level n:  100·(n−1)² + 400·(n−1)
@@ -48,16 +49,42 @@ export const RANKS = [
   { id: 'B', name: 'B-Rank', title: 'Elite Hunter', color: '#8b6cff', minLevel: 4, minWorkouts: 18, trial: 21,
     perk: 'Passed the Elite Trial. Shadow Training opens.' },
   { id: 'A', name: 'A-Rank', title: 'Shadow Vanguard', color: '#c26bff', minLevel: 5, minWorkouts: 24, trial: 26,
-    perk: 'Survived the Shadow Trial. The Final Dungeon awaits.' },
-  { id: 'S', name: 'S-Rank', title: 'Sovereign', color: '#ffcf5c', minLevel: 7, minWorkouts: 31, trial: 31,
-    perk: 'Completed every mission. The program is yours.' },
+    perk: 'Survived the Shadow Trial. S-Rank is earned only by reaching your goal.' },
+  { id: 'S', name: 'S-Rank', title: 'Sovereign', color: '#ffcf5c', minLevel: 8, minWorkouts: 31, trial: 31, special: 'goal',
+    perk: 'You reached your goal. Few hunters ever get here.' },
 ];
 
-export function rankFor(level, completedDays) {
+/**
+ * Requirement checklist for a rank. ctx comes from deriveProfile().
+ * S-Rank is about real-world results: it needs you to be close to (or at)
+ * your goal — or, with no goal set, two full cycles plus a measured improvement.
+ */
+export function rankRequirements(r, ctx) {
+  const reqs = [{ label: `Reach Level ${r.minLevel}`, ok: ctx.level >= r.minLevel }];
+  if (r.special === 'goal') {
+    reqs.push({ label: 'Clear Day 31 (Rank Advancement Trial)', ok: ctx.cleared31 });
+    if (ctx.goal) {
+      reqs.push({
+        label: ctx.goal.reached ? 'Goal reached' : `Get within 10% of your goal (now ${Math.round(ctx.goal.pct)}%)`,
+        ok: ctx.goal.reached || ctx.goal.pct >= 90,
+      });
+    } else {
+      reqs.push({ label: `Complete 2 full cycles (${Math.min(ctx.totalWorkouts, 62)}/62 missions)`, ok: ctx.totalWorkouts >= 62 });
+      reqs.push({ label: 'Improve a stat in a re-evaluation — or set a goal', ok: ctx.retestImproved });
+    }
+    return reqs;
+  }
+  reqs.push({ label: `${r.minWorkouts} missions completed`, ok: ctx.completedDays.size >= r.minWorkouts });
+  if (r.trial) reqs.push({ label: `Clear Day ${r.trial}`, ok: ctx.completedDays.has(r.trial), day: r.trial });
+  return reqs;
+}
+
+export function rankFor(level, completedDays, extra = {}) {
   const set = completedDays instanceof Set ? completedDays : new Set(completedDays);
+  const ctx = { level, completedDays: set, cleared31: set.has(31), totalWorkouts: set.size, goal: null, retestImproved: false, ...extra };
   let rank = RANKS[0];
   for (const r of RANKS) {
-    if (level >= r.minLevel && set.size >= r.minWorkouts && (r.trial == null || set.has(r.trial))) rank = r;
+    if (rankRequirements(r, ctx).every((q) => q.ok)) rank = r;
   }
   return rank;
 }
@@ -126,8 +153,8 @@ const dayDiff = (a, b) => Math.round((keyToDate(b) - keyToDate(a)) / 86400000);
  * Current streak stays alive until the end of the day after your last workout.
  * Missing a day resets the streak only — never the program progress.
  */
-export function computeStreaks(completed, today = toDateKey()) {
-  const dates = [...new Set(Object.values(completed).map((c) => c.date))].sort();
+export function computeStreaks(completed, today = toDateKey(), pastDates = []) {
+  const dates = [...new Set([...pastDates, ...Object.values(completed).map((c) => c.date)])].sort();
   if (!dates.length) return { current: 0, longest: 0, activeToday: false, dates };
   let longest = 1;
   let run = 1;
@@ -145,12 +172,27 @@ export function computeStreaks(completed, today = toDateKey()) {
 export function deriveProfile(state, today = toDateKey()) {
   const completedDays = new Set(Object.keys(state.completed).map(Number));
   const lp = levelProgress(state.xp);
-  const rank = rankFor(lp.level, completedDays);
-  const streak = computeStreaks(state.completed, today);
+  // Rank never drops when a new cycle starts.
+  const evals = state.evaluations || [];
+  const rankCtx = {
+    level: lp.level,
+    completedDays,
+    cleared31: completedDays.has(31) || (state.cycles || []).length > 0,
+    totalWorkouts: (state.pastWorkouts || 0) + completedDays.size,
+    goal: goalProgress(state.profile?.body),
+    retestImproved:
+      evals.length >= 2 && Object.keys(evals[evals.length - 1].scores).some((k) => evals[evals.length - 1].scores[k] > evals[0].scores[k]),
+  };
+  const earned = rankFor(lp.level, completedDays, rankCtx);
+  const floor = RANKS[state.rankFloor || 0];
+  const rank = RANKS.indexOf(earned) >= RANKS.indexOf(floor) ? earned : floor;
+  const streak = computeStreaks(state.completed, today, state.pastDates || []);
+  const past = state.pastQuests || { total: 0, daily: 0, food: 0 };
   let nextDay = 1;
   while (completedDays.has(nextDay) && nextDay <= TOTAL_DAYS) nextDay++;
-  const questCount = Object.values(state.quests).reduce((n, q) => n + (q.daily ? 1 : 0) + (q.bonus ? 1 : 0), 0);
-  const dailyCount = Object.values(state.quests).filter((q) => q.daily).length;
+  const questCount = past.total + Object.values(state.quests).reduce((n, q) => n + (q.daily ? 1 : 0) + (q.bonus ? 1 : 0) + (q.food ? 1 : 0), 0);
+  const foodCount = past.food + Object.values(state.quests).filter((q) => q.food).length;
+  const dailyCount = past.daily + Object.values(state.quests).filter((q) => q.daily).length;
   const doneToday = Object.values(state.completed).some((c) => c.date === today);
   return {
     ...lp,
@@ -159,13 +201,29 @@ export function deriveProfile(state, today = toDateKey()) {
     streak,
     completedDays,
     daysDone: completedDays.size,
+    cycle: state.cycle || 1,
+    rankCtx,
+    evaluated: (state.evaluations || []).length > 0 || !!state.evalSkipped,
+    evaluations: state.evaluations || [],
+    totalWorkouts: (state.pastWorkouts || 0) + completedDays.size,
     nextDay: nextDay > TOTAL_DAYS ? null : nextDay,
     programComplete: completedDays.size >= TOTAL_DAYS,
     questCount,
     dailyCount,
+    foodCount,
     doneToday,
     totalMinutes: Math.round((state.totalSeconds || 0) / 60),
   };
+}
+
+/* ─────────────────────────── VARIATION XP ───────────────────────────
+ * XP scales with the variation actually used for each completed set.
+ */
+export const LEVEL_XP_MULT = { beginner: 0.8, standard: 1, advanced: 1.25 };
+export function variationMultiplier(levels) {
+  if (!levels || !levels.length) return 1;
+  const sum = levels.reduce((n, l) => n + (LEVEL_XP_MULT[l] ?? 1), 0);
+  return Math.round((sum / levels.length) * 100) / 100;
 }
 
 export { QUEST_XP };

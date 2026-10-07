@@ -38,6 +38,11 @@ export default function Complete({ result, nav }) {
           <div className="xp-reward">
             <CountUp to={result.xp} prefix="+" suffix=" XP" />
           </div>
+          {result.varMult != null && result.varMult !== 1 && (
+            <p className={`center small xp-mult-line ${result.varMult > 1 ? 'up' : 'down'}`}>
+              {result.varMult > 1 ? 'Harder variations bonus' : 'Easier variations'} · ×{result.varMult} (base {result.baseXp} XP)
+            </p>
+          )}
           <ul className="stat-gains">
             {STAT_KEYS.filter((k) => result.stats[k] > 0).map((k, i) => (
               <li key={k} className="fade" style={{ animationDelay: `${0.5 + i * 0.12}s` }}>

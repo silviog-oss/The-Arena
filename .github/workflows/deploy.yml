@@ -1,5 +1,7 @@
-# Builds and deploys The Arena to GitHub Pages on every push to main.
-# One-time setup: repo Settings → Pages → Source: "GitHub Actions".
+# OPTIONAL: builds and deploys The Arena with GitHub Actions on every push to main.
+# Only use this if Settings → Pages → Source is set to "GitHub Actions".
+# The simpler option needs no Actions: Source "Deploy from a branch" → main → /docs
+# (the /docs folder already contains the built app — re-run `npm run build` after changes).
 name: Deploy to GitHub Pages
 on:
   push:
@@ -28,7 +30,7 @@ jobs:
           VITE_PUSH_SERVER_URL: ${{ vars.VITE_PUSH_SERVER_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: docs
   deploy:
     needs: build
     runs-on: ubuntu-latest

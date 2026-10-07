@@ -4,6 +4,7 @@ import { STAT_INFO } from '../lib/progression.js';
 import { PROGRAM } from '../data/program.js';
 import { ScreenHeader, Panel, Pill } from '../components/UI.jsx';
 import { Icon } from '../components/Icons.jsx';
+import ExerciseFigure from '../components/ExerciseFigure.jsx';
 
 export default function ExerciseDetail({ id, nav }) {
   const { variationFor, actions } = useGame();
@@ -14,6 +15,10 @@ export default function ExerciseDetail({ id, nav }) {
   return (
     <div className="screen">
       <ScreenHeader title={ex.name} sub={ex.category} onBack={nav.pop} />
+
+      <div className="fig-wrap panel">
+        <ExerciseFigure id={id} size={300} />
+      </div>
 
       <Panel>
         <div className="tag-row">

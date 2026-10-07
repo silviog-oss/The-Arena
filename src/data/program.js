@@ -496,4 +496,4 @@ export function phaseForDay(day) {
   return PHASES.find((p) => day >= p.days[0] && day <= p.days[1]);
 }
 
-export const QUEST_XP = { daily: 25, bonus: 50 };
+export const QUEST_XP = { daily: 25, food: 30, bonus: 50 };

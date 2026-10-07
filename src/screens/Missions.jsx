@@ -5,13 +5,18 @@ import { ScreenHeader, DifficultyTag } from '../components/UI.jsx';
 import { Icon } from '../components/Icons.jsx';
 
 export default function Missions({ nav }) {
-  const { profile } = useGame();
+  const { profile, dayFor, intensity } = useGame();
 
   return (
     <div className="screen">
-      <ScreenHeader title="Missions" sub={`${profile.daysDone} of ${TOTAL_DAYS} cleared`} />
+      <ScreenHeader title="Missions" sub={`${profile.cycle > 1 ? `Cycle ${profile.cycle} · ` : ''}${profile.daysDone} of ${TOTAL_DAYS} cleared`} />
+      {intensity.id !== 'normal' && (
+        <p className={`note adapt-note tone-border-${intensity.tone}`}>
+          Difficulty: <b className={`tone-${intensity.tone}`}>{intensity.label}</b> — {intensity.summary}. Change your goal pace in Profile.
+        </p>
+      )}
       {PHASES.map((ph) => {
-        const days = PROGRAM.filter((d) => d.day >= ph.days[0] && d.day <= ph.days[1]);
+        const days = PROGRAM.filter((d) => d.day >= ph.days[0] && d.day <= ph.days[1]).map((d) => dayFor(d.day));
         const done = days.filter((d) => profile.completedDays.has(d.day)).length;
         return (
           <section key={ph.id} className="phase">

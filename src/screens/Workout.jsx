@@ -11,6 +11,8 @@ import { useWakeLock } from '../hooks/useSystem.js';
 import { Icon } from '../components/Icons.jsx';
 import { Button, ProgressBar, Sheet } from '../components/UI.jsx';
 import VariationPicker from '../components/VariationPicker.jsx';
+import ExerciseHelp from '../components/ExerciseHelp.jsx';
+import ExerciseFigure from '../components/ExerciseFigure.jsx';
 
 const fmt = (s) => {
   const v = Math.max(0, Math.ceil(s));
@@ -18,8 +20,8 @@ const fmt = (s) => {
 };
 
 export default function Workout({ day, resume, nav }) {
-  const { state, actions, variationFor, profile } = useGame();
-  const def = DAY_MAP[day];
+  const { state, actions, variationFor, profile, dayFor } = useGame();
+  const def = useMemo(() => dayFor(day), [dayFor, day]);
   const steps = useMemo(() => buildSteps(def), [def]);
   const totalWork = useMemo(() => workCount(steps), [steps]);
   const saved = resume && state.activeWorkout?.day === day ? state.activeWorkout : null;
@@ -32,6 +34,10 @@ export default function Workout({ day, resume, nav }) {
   const [elapsed, setElapsed] = useState(saved?.seconds || 0);
   const [skipped, setSkipped] = useState(saved?.skipped || 0);
   const [exitOpen, setExitOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [wasRunning, setWasRunning] = useState(false);
+  // stepIndex → variation level actually used ('beginner' | 'standard' | 'advanced')
+  const levelsRef = useRef(saved?.levels || {});
   const [finishing, setFinishing] = useState(false);
 
   const s = state.settings;
@@ -45,7 +51,7 @@ export default function Workout({ day, resume, nav }) {
 
   // Refs so the interval always sees fresh values.
   const r = useRef({});
-  r.current = { index, remaining, running, steps, elapsed, skipped, s };
+  r.current = { index, remaining, running, steps, elapsed, skipped, s, variationFor };
 
   const feedback = useCallback((kind) => {
     const st = r.current.s;
@@ -54,7 +60,8 @@ export default function Workout({ day, resume, nav }) {
   }, []);
 
   const persist = useCallback(
-    (i, secs, sk) => actions.setActive({ day, step: i, seconds: Math.round(secs), skipped: sk, updatedAt: Date.now() }),
+    (i, secs, sk) =>
+      actions.setActive({ day, step: i, seconds: Math.round(secs), skipped: sk, levels: levelsRef.current, updatedAt: Date.now() }),
     [actions, day],
   );
 
@@ -63,7 +70,12 @@ export default function Workout({ day, resume, nav }) {
     setFinishing(true);
     setRunning(false);
     feedback('complete');
-    const result = actions.completeDay({ day, seconds: Math.round(r.current.elapsed), skipped: r.current.skipped });
+    const result = actions.completeDay({
+      day,
+      seconds: Math.round(r.current.elapsed),
+      skipped: r.current.skipped,
+      levels: Object.values(levelsRef.current),
+    });
     const n = s.notifications;
     if (n.enabled) {
       if (n.missionComplete) {
@@ -80,8 +92,17 @@ export default function Workout({ day, resume, nav }) {
   }, [actions, day, feedback, finishing, nav, s.notifications]);
 
   const goTo = useCallback(
-    (i, { auto = false } = {}) => {
+    (i, { auto = false, skipped: wasSkipped = false } = {}) => {
       const list = r.current.steps;
+      // Moving forward off a completed work set → remember which variation was used.
+      const cur = list[r.current.index];
+      if (i > r.current.index && cur?.kind === 'work' && !cur.warmup) {
+        if (wasSkipped) delete levelsRef.current[r.current.index];
+        else {
+          const ex = EXERCISE_MAP[cur.exId];
+          levelsRef.current[r.current.index] = ex.variations[r.current.variationFor(cur.exId)].level;
+        }
+      }
       if (i >= list.length) {
         finish();
         return;
@@ -155,7 +176,7 @@ export default function Workout({ day, resume, nav }) {
       setSkipped(sk);
       r.current.skipped = sk;
     }
-    goTo(index + 1, { auto: running });
+    goTo(index + 1, { auto: running, skipped: step.kind === 'work' });
   };
 
   const prev = () => goTo(index - 1);
@@ -192,12 +213,22 @@ export default function Workout({ day, resume, nav }) {
           <small>DAY {day}</small>
           <b>{def.title}</b>
         </div>
-        <span className="wo-clock mono">{fmt(elapsed)}</span>
+        <button
+          className="icon-btn help-btn"
+          aria-label="How to do this exercise"
+          onClick={() => {
+            setWasRunning(running);
+            setRunning(false); // pause while reading
+            setHelpOpen(true);
+          }}
+        >
+          ?
+        </button>
       </header>
 
       <div className="wo-progress">
         <ProgressBar value={workDone} max={totalWork} height={6} label="Workout progress" />
-        <span className="mono small muted">{workDone}/{totalWork} sets</span>
+        <span className="mono small muted">{workDone}/{totalWork} sets · {fmt(elapsed)}</span>
       </div>
 
       <div className="wo-body">
@@ -220,6 +251,11 @@ export default function Workout({ day, resume, nav }) {
           </>
         )}
 
+        {(isRest || isPrep) && nextEx && (
+          <button className="next-fig" onClick={() => { setWasRunning(running); setRunning(false); setHelpOpen(true); }} aria-label="How to do the next exercise">
+            <ExerciseFigure id={nextEx.id} size={150} />
+          </button>
+        )}
         <div className="wo-dial">
           {timed ? (
             <svg viewBox="0 0 240 240" className="ring" aria-hidden="true">
@@ -299,6 +335,18 @@ export default function Workout({ day, resume, nav }) {
         </div>
         <p className="safety-line">Pain or dizziness? Stop now. Your progress is saved.</p>
       </footer>
+
+      <Sheet
+        open={helpOpen}
+        onClose={() => {
+          setHelpOpen(false);
+          if (wasRunning) setRunning(true);
+        }}
+        title={(ex || nextEx)?.name || 'How to'}
+      >
+        <ExerciseHelp exId={(ex || nextEx)?.id} />
+        <p className="muted small center">{wasRunning ? 'Timer paused — closing resumes it.' : 'Timer is paused.'}</p>
+      </Sheet>
 
       <Sheet open={exitOpen} onClose={() => setExitOpen(false)} title="Leave mission?">
         <p className="muted">Your position is saved. You can resume this mission from the Home screen.</p>

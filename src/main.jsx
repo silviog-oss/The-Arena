@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 import { GameProvider } from './state/GameContext.jsx';
 import { requestPersistence } from './lib/storage.js';
 import './styles/base.css';
@@ -9,11 +10,14 @@ import './styles/screens.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <GameProvider>
-      <App />
-    </GameProvider>
+    <ErrorBoundary>
+      <GameProvider>
+        <App />
+      </GameProvider>
+    </ErrorBoundary>
   </React.StrictMode>,
 );
+window.__arenaStarted = true;
 
 requestPersistence();
 

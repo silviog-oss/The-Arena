@@ -5,6 +5,7 @@ import {
   weightForBmi, healthyRangeKg, goalError, goalProgress, MIN_GOAL_BMI,
 } from '../lib/body.js';
 import { Button, ProgressBar } from './UI.jsx';
+import { pacesFor, maxSafeRate, goalTimeline, INTENSITY, intensityFor } from '../lib/intensity.js';
 
 const num = (v) => (v === '' || v == null ? '' : String(v));
 
@@ -190,17 +191,27 @@ export function BodyCard({ body, onEdit }) {
 
 /* ───────── Goal ───────── */
 
-/** Set a goal by weight or by BMI. Stored as a goal weight in kg. */
+/** Set a goal by weight or BMI, then choose a pace. The pace adapts workout difficulty. */
 export function GoalForm({ body, onSave, onClear }) {
   const imperial = body.units === 'imperial';
   const [mode, setMode] = useState(body.goal?.type || 'weight');
   const initialW = body.goal?.weightKg ? (imperial ? Math.round(kgToLb(body.goal.weightKg)) : body.goal.weightKg) : '';
   const [w, setW] = useState(num(initialW));
   const [b, setB] = useState(num(body.goal?.weightKg ? bmi(body.goal.weightKg, body.heightCm) : ''));
+  const [paceId, setPaceId] = useState(body.goal?.pace || 'steady');
   const goalKg = mode === 'weight' ? (w ? (imperial ? lbToKg(Number(w)) : Number(w)) : null) : b ? weightForBmi(Number(b), body.heightCm) : null;
   const err = goalKg ? goalError(goalKg, body.heightCm) : null;
   const [lo, hi] = healthyRangeKg(body.heightCm);
   const fmtW = (kg) => formatWeight(kg, body.units);
+  const fmtRate = (kg) => (imperial ? `${Math.round(kgToLb(kg) * 10) / 10} lb` : `${kg} kg`);
+
+  const direction = goalKg && !err ? (goalKg < body.weightKg - 0.05 ? 'lose' : goalKg > body.weightKg + 0.05 ? 'gain' : 'maintain') : null;
+  const paces = direction && direction !== 'maintain' ? pacesFor(direction, body.weightKg, body.age) : [];
+  const pace = paces.find((p) => p.id === paceId && !p.disabled) || paces.find((p) => p.recommended);
+  const timeline = pace ? goalTimeline(body.weightKg, goalKg, pace.kgPerWeek) : null;
+  const intensity = pace ? INTENSITY[pace.intensity] : INTENSITY.normal;
+  const preview = pace ? intensityFor({ goal: { pace: pace.id, direction, weightKg: goalKg, startKg: body.weightKg } }) : intensity;
+  const fmtDate = (d) => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
     <div className="body-form">
@@ -226,16 +237,80 @@ export function GoalForm({ body, onSave, onClear }) {
       </div>
       <p className="muted small">Healthy range for your height: <b>{fmtW(lo)} – {fmtW(hi)}</b> (BMI 18.5–24.9).</p>
       {err && <p className="form-error">{err}</p>}
+
+      {paces.length > 0 && (
+        <div className="field">
+          <span>How fast do you want to {direction}?</span>
+          <div className="pace-grid">
+            {paces.map((p) => (
+              <button
+                key={p.id}
+                className={`pace ${pace?.id === p.id ? 'on' : ''}`}
+                disabled={p.disabled}
+                onClick={() => setPaceId(p.id)}
+                aria-pressed={pace?.id === p.id}
+              >
+                <b>{p.label}</b>
+                <small className="mono">{fmtRate(p.kgPerWeek)}/wk</small>
+                {p.recommended && <i>Recommended</i>}
+              </button>
+            ))}
+          </div>
+          {paces.some((p) => p.capped) && (
+            <p className="muted small">Max pace is capped at 1% of your body weight per week ({fmtRate(maxSafeRate(direction, body.weightKg))}) for safety.</p>
+          )}
+          {paces.some((p) => p.disabled) && <p className="muted small">Faster paces aren’t available under 18.</p>}
+        </div>
+      )}
+
+      {timeline && (
+        <div className={`pace-card tone-border-${preview.tone}`}>
+          <div className="pace-row">
+            <span>Realistic time</span>
+            <b>~{timeline.weeks} week{timeline.weeks === 1 ? '' : 's'} · {fmtDate(timeline.date)}</b>
+          </div>
+          <div className="pace-row">
+            <span>During the 31-day program</span>
+            <b>≈ {fmtRate(timeline.in31)} {direction === 'lose' ? 'lost' : 'gained'}</b>
+          </div>
+          <div className="pace-row">
+            <span>Workout difficulty</span>
+            <b className={`tone-${preview.tone}`}>{preview.label}</b>
+          </div>
+          {timeline.weeks * 7 > 31 && (
+            <p className="small cycle-note">
+              That’s longer than one 31-day program (~{Math.ceil((timeline.weeks * 7) / 31)} cycles). After Day 31 you continue
+              with Cycle 2+ — same structure, harder missions, more XP.
+            </p>
+          )}
+          <p className="small muted">{preview.summary}</p>
+          <p className={`pace-warning tone-${preview.tone}`}>⚠ {preview.warning}</p>
+          {direction === 'lose' && pace.kgPerWeek >= 0.75 && (
+            <p className="small muted">Faster loss also depends on diet. Don’t go below about 1,200 kcal/day (women) or 1,500 kcal/day (men) without medical supervision.</p>
+          )}
+        </div>
+      )}
+      {direction === 'maintain' && <p className="note">Goal matches your current weight — workouts stay at standard difficulty.</p>}
+
       <Button
         size="lg"
         className="w-full"
         disabled={!goalKg || !!err}
-        onClick={() => onSave({ type: mode, weightKg: Math.round(goalKg * 10) / 10, startKg: body.weightKg, setAt: Date.now() })}
+        onClick={() =>
+          onSave({
+            type: mode,
+            weightKg: Math.round(goalKg * 10) / 10,
+            startKg: body.weightKg,
+            setAt: Date.now(),
+            direction: direction || 'maintain',
+            pace: pace?.id || null,
+            kgPerWeek: pace?.kgPerWeek || null,
+          })
+        }
       >
         Save goal
       </Button>
       {onClear && body.goal && <button className="link-btn" onClick={onClear}>Remove goal</button>}
-      <p className="muted small center">A sustainable pace is about 0.25–1 kg (0.5–2 lb) per week. Pair training with good food and sleep.</p>
     </div>
   );
 }
@@ -253,6 +328,8 @@ export function WeighIn({ body, onSave }) {
     </div>
   );
 }
+
+const PACE_LABEL = (g) => (g.direction === 'gain' ? { relaxed: 'Lean', steady: 'Steady', fast: 'Fast' } : { relaxed: 'Relaxed', steady: 'Steady', fast: 'Fast', max: 'Max safe' })[g.pace] || g.pace;
 
 export function GoalCard({ body, onSetGoal, onLog }) {
   const p = goalProgress(body);
@@ -284,7 +361,17 @@ export function GoalCard({ body, onSetGoal, onLog }) {
         <span>Start {fmtW(p.start)}</span>
         <span>Now {fmtW(p.current)}</span>
       </div>
-      {!p.reached && p.weeks > 0 && <p className="small muted">At ~0.5 kg/week: about {p.weeks} week{p.weeks === 1 ? '' : 's'}.</p>}
+      {!p.reached && p.weeks > 0 && (
+        <p className="small muted">
+          At {body.goal.kgPerWeek || 0.5} kg/week: about {p.weeks} week{p.weeks === 1 ? '' : 's'} to go.
+        </p>
+      )}
+      {body.goal.pace && (
+        <div className="pace-chip">
+          <span>Pace: <b>{PACE_LABEL(body.goal)}</b></span>
+          <span>Workouts: <b className={`tone-${intensityFor(body).tone}`}>{intensityFor(body).label}</b></span>
+        </div>
+      )}
       {log.length > 1 && (
         <ul className="weight-log">
           {log.slice().reverse().map((e) => (

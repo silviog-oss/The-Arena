@@ -1,5 +1,4 @@
 node_modules
-dist
 .env
 .env.local
 push-server/node_modules
