@@ -186,7 +186,7 @@ export function deriveProfile(state, today = toDateKey()) {
   const earned = rankFor(lp.level, completedDays, rankCtx);
   const floor = RANKS[state.rankFloor || 0];
   const rank = RANKS.indexOf(earned) >= RANKS.indexOf(floor) ? earned : floor;
-  const streak = computeStreaks(state.completed, today, state.pastDates || []);
+  const streak = computeStreaks(state.completed, today, [...(state.pastDates || []), ...(state.restDays || [])]);
   const past = state.pastQuests || { total: 0, daily: 0, food: 0 };
   let nextDay = 1;
   while (completedDays.has(nextDay) && nextDay <= TOTAL_DAYS) nextDay++;

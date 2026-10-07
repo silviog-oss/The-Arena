@@ -4,6 +4,7 @@ import { LogoMark } from '../components/Logo.jsx';
 import { Button, Disclaimer } from '../components/UI.jsx';
 import { BodyForm, GoalForm } from '../components/Body.jsx';
 import { bodyComplete } from '../lib/body.js';
+import { EquipmentForm } from '../components/Training.jsx';
 
 const LEVELS = [
   { id: 'beginner', label: 'New to training', sub: 'Starts with easier variations (wall/knee push-ups, assisted squats).' },
@@ -60,6 +61,8 @@ export default function Onboarding() {
               </button>
             ))}
           </div>
+          <h3 className="ob-sub">Dumbbells</h3>
+          <EquipmentForm compact />
           <Button size="lg" className="w-full" onClick={() => setStep(2)}>
             Continue
           </Button>

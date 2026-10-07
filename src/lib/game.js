@@ -3,7 +3,8 @@
  * No React here, which keeps the rules easy to test and reuse.
  */
 import { QUEST_XP } from '../data/program.js';
-import { dayFor } from './intensity.js';
+import { dayForState } from './modifiers.js';
+import { mergeRecords, candidatesFromLog, candidatesFromEvaluation, isCelebrated } from './records.js';
 import { ACHIEVEMENTS } from '../data/achievements.js';
 import { scoreEvaluation, recommendedExperience, EVAL_XP } from './evaluation.js';
 import { deriveProfile, statGainsForDay, toDateKey, STAT_KEYS, variationMultiplier, RANKS } from './progression.js';
@@ -31,10 +32,10 @@ export function evaluateAchievements(state, last = null, today = toDateKey()) {
  * Complete a day's main quest.
  * First completion grants XP + stats. Replays only add training time.
  */
-export function completeDay(state, { day, seconds = 0, skipped = 0, levels = null, now = new Date() }) {
-  const def = dayFor(day, state.profile.body, state.cycle || 1); // adapted to goal pace + cycle
-  const varMult = levels ? variationMultiplier(levels) : 1;
+export function completeDay(state, { day, seconds = 0, skipped = 0, levels = null, log = null, now = new Date() }) {
   const today = toDateKey(now);
+  const def = dayForState(day, state, today); // subs + goal pace + cycle + recovery/readiness
+  const varMult = levels ? variationMultiplier(levels) : 1;
   const before = deriveProfile(state, today);
   const already = !!state.completed[day];
 
@@ -59,6 +60,37 @@ export function completeDay(state, { day, seconds = 0, skipped = 0, levels = nul
         [day]: { date: today, at: now.getTime(), xp: xpGain, seconds, stats: statGain, skipped },
       },
     };
+  }
+
+  // Workout history (every finish, including replays)
+  const entry = {
+    at: now.getTime(),
+    date: today,
+    day,
+    cycle: state.cycle || 1,
+    title: def.title,
+    type: def.type,
+    xp: xpGain,
+    seconds,
+    stats: statGain,
+    skipped,
+    replay: already,
+    mods: def.mods || null,
+    sets: (log || []).filter((x) => x && !x.warmup).map((x) => ({
+      exId: x.exId, variation: x.variation, level: x.level, reps: x.reps || null, time: x.time || null, kg: x.kg || null, skipped: !!x.skipped,
+    })),
+  };
+  next.history = [...(state.history || []), entry].slice(-1000);
+
+  // Personal records
+  const merged = mergeRecords(state.records, candidatesFromLog(log || [], today), now);
+  next.records = merged.records;
+  const newRecords = merged.fresh.filter((k) => isCelebrated(k, merged.records[k]));
+
+  // Recovery Mode counts down per completed (non-replay) training workout
+  if (!already && state.recoveryMode?.remaining > 0 && def.type !== 'mobility') {
+    const remaining = state.recoveryMode.remaining - 1;
+    next.recoveryMode = remaining > 0 ? { ...state.recoveryMode, remaining } : null;
   }
 
   const last = {
@@ -90,6 +122,9 @@ export function completeDay(state, { day, seconds = 0, skipped = 0, levels = nul
       daysDone: after.daysDone,
       streak: after.streak.current,
       newAchievements: fresh,
+      newRecords,
+      records: next.records,
+      mods: def.mods || null,
     },
   };
 }
@@ -160,11 +195,13 @@ export function completeEvaluation(state, { raw, applyExperience = true, now = n
   }
   const xp = EVAL_XP[kind];
   const recommended = recommendedExperience(raw);
+  const merged = mergeRecords(state.records, candidatesFromEvaluation(raw, toDateKey(now)), now);
   let next = {
     ...state,
     xp: state.xp + xp,
     stats,
     evalSkipped: false,
+    records: merged.records,
     evaluations: [...list, { at: now.getTime(), date: toDateKey(now), kind, raw, scores }],
   };
   if (kind === 'initial' && applyExperience) {
@@ -175,11 +212,40 @@ export function completeEvaluation(state, { raw, applyExperience = true, now = n
   const after = deriveProfile(next, toDateKey(now));
   return {
     state: next,
-    result: { kind, scores, prev, gains, xp, recommended, levelBefore: before.level, levelAfter: after.level },
+    result: {
+      kind, scores, prev, gains, xp, recommended, levelBefore: before.level, levelAfter: after.level,
+      raw, first: list[0] || null, newRecords: kind === 'retest' ? merged.fresh : [],
+    },
   };
 }
 
 /** Skip Mission 0: neutral starting stats so the program can begin. */
 export function skipEvaluation(state) {
   return { ...state, evalSkipped: true, stats: { STR: 5, END: 5, AGI: 5, VIT: 5 } };
+}
+
+/* ───────── Recovery & readiness ───────── */
+
+/** Hunter Status check-in for today. */
+export function setReadiness(state, level, { overdrive = false, now = new Date() } = {}) {
+  const date = toDateKey(now);
+  return { ...state, readiness: { ...(state.readiness || {}), [date]: { level, overdrive, at: now.getTime() } } };
+}
+
+/** Recovery Mode: lighter workouts (−1 set, +15 s rest) for the next N workouts. */
+export function startRecoveryMode(state, { workouts = 2, reason = 'manual', now = new Date() } = {}) {
+  return { ...state, recoveryMode: { remaining: workouts, reason, startedAt: now.getTime() }, awayHandled: toDateKey(now) };
+}
+
+export function endRecoveryMode(state) {
+  return { ...state, recoveryMode: null };
+}
+
+/** Log a recovery day. It keeps the streak alive (max 2 per 7 days, enforced by the UI). */
+export function logRestDay(state, now = new Date()) {
+  const date = toDateKey(now);
+  if ((state.restDays || []).includes(date)) return state;
+  const next = { ...state, restDays: [...(state.restDays || []), date].slice(-200) };
+  next.achievements = evaluateAchievements(next, null, date).achievements;
+  return next;
 }

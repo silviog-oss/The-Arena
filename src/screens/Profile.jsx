@@ -14,6 +14,8 @@ import {
 } from '../components/UI.jsx';
 import { LogoMark } from '../components/Logo.jsx';
 import { BodyForm, BodyCard, GoalCard, GoalForm } from '../components/Body.jsx';
+import Measurements from '../components/Measurements.jsx';
+import { EquipmentForm } from '../components/Training.jsx';
 import { bodyComplete } from '../lib/body.js';
 import { retestAvailable, gradeFor } from '../lib/evaluation.js';
 import { STAT_INFO } from '../lib/progression.js';
@@ -180,6 +182,16 @@ export default function Profile({ nav }) {
           />
         </Panel>
       )}
+
+      {bodyComplete(state.profile.body) && (
+        <Panel title="Measurements">
+          <Measurements />
+        </Panel>
+      )}
+
+      <Panel title="🏋 Equipment">
+        <EquipmentForm />
+      </Panel>
 
       <Panel title="Attributes">
         {STAT_KEYS.map((k) => (

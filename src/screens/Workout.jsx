@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useGame } from '../state/GameContext.jsx';
-import { DAY_MAP } from '../data/program.js';
+import { DAY_MAP, WARMUP, phaseForDay } from '../data/program.js';
+import { variationNeedsDb, hasDumbbells } from '../lib/modifiers.js';
+import { estimateMinutes, variationMultiplier } from '../lib/progression.js';
 import { EXERCISE_MAP } from '../data/exercises.js';
 import { buildSteps, describeTarget, workCount } from '../lib/workout.js';
 import { sounds, unlockAudio, vibrate } from '../lib/feedback.js';
@@ -13,6 +15,7 @@ import { Button, ProgressBar, Sheet } from '../components/UI.jsx';
 import VariationPicker from '../components/VariationPicker.jsx';
 import ExerciseHelp from '../components/ExerciseHelp.jsx';
 import ExerciseFigure from '../components/ExerciseFigure.jsx';
+import { ReplaceExercise } from '../components/Training.jsx';
 
 const fmt = (s) => {
   const v = Math.max(0, Math.ceil(s));
@@ -38,7 +41,12 @@ export default function Workout({ day, resume, nav }) {
   const [wasRunning, setWasRunning] = useState(false);
   // stepIndex → variation level actually used ('beginner' | 'standard' | 'advanced')
   const levelsRef = useRef(saved?.levels || {});
+  // stepIndex → logged set { exId, variation, level, reps, time, kg, amrap, warmup, skipped }
+  const logRef = useRef(saved?.log || {});
+  const [repsDone, setRepsDone] = useState(null); // reps adjust for the current rep set
+  const [, force] = useState(0);
   const [finishing, setFinishing] = useState(false);
+  const [gateOpen, setGateOpen] = useState(true);
 
   const s = state.settings;
   const step = steps[index];
@@ -51,7 +59,7 @@ export default function Workout({ day, resume, nav }) {
 
   // Refs so the interval always sees fresh values.
   const r = useRef({});
-  r.current = { index, remaining, running, steps, elapsed, skipped, s, variationFor };
+  r.current = { index, remaining, running, steps, elapsed, skipped, s, variationFor, repsDone };
 
   const feedback = useCallback((kind) => {
     const st = r.current.s;
@@ -61,7 +69,7 @@ export default function Workout({ day, resume, nav }) {
 
   const persist = useCallback(
     (i, secs, sk) =>
-      actions.setActive({ day, step: i, seconds: Math.round(secs), skipped: sk, levels: levelsRef.current, updatedAt: Date.now() }),
+      actions.setActive({ day, step: i, seconds: Math.round(secs), skipped: sk, levels: levelsRef.current, log: logRef.current, updatedAt: Date.now() }),
     [actions, day],
   );
 
@@ -75,6 +83,7 @@ export default function Workout({ day, resume, nav }) {
       seconds: Math.round(r.current.elapsed),
       skipped: r.current.skipped,
       levels: Object.values(levelsRef.current),
+      log: Object.keys(logRef.current).sort((a, b) => a - b).map((k) => logRef.current[k]),
     });
     const n = s.notifications;
     if (n.enabled) {
@@ -96,12 +105,27 @@ export default function Workout({ day, resume, nav }) {
       const list = r.current.steps;
       // Moving forward off a completed work set → remember which variation was used.
       const cur = list[r.current.index];
-      if (i > r.current.index && cur?.kind === 'work' && !cur.warmup) {
-        if (wasSkipped) delete levelsRef.current[r.current.index];
-        else {
-          const ex = EXERCISE_MAP[cur.exId];
-          levelsRef.current[r.current.index] = ex.variations[r.current.variationFor(cur.exId)].level;
+      if (i > r.current.index && cur?.kind === 'work') {
+        const ex = EXERCISE_MAP[cur.exId];
+        const v = ex.variations[r.current.variationFor(cur.exId)];
+        if (!cur.warmup) {
+          if (wasSkipped) delete levelsRef.current[r.current.index];
+          else levelsRef.current[r.current.index] = v.level;
         }
+        // Log the set for history + personal records.
+        const kg = variationNeedsDb(v) && hasDumbbells(r.current.s) ? r.current.s.dbWeights?.[cur.exId] || null : null;
+        const amrap = !!(cur.note && /max reps/i.test(cur.note));
+        logRef.current[r.current.index] = {
+          exId: cur.exId,
+          variation: v.name,
+          level: v.level,
+          reps: cur.reps ? (r.current.repsDone ?? cur.reps) : amrap ? logRef.current[r.current.index]?.reps || 0 : null,
+          time: cur.time || null,
+          kg,
+          amrap,
+          warmup: !!cur.warmup,
+          skipped: wasSkipped,
+        };
       }
       if (i >= list.length) {
         finish();
@@ -111,6 +135,7 @@ export default function Workout({ day, resume, nav }) {
       setIndex(target);
       setRemaining(list[target].time || 0);
       setStopwatch(0);
+      setRepsDone(null);
       persist(target, r.current.elapsed, r.current.skipped);
       if (r.current.running || auto) {
         const k = list[target].kind;
@@ -202,6 +227,73 @@ export default function Workout({ day, resume, nav }) {
   const R = 108;
   const C = 2 * Math.PI * R;
   const restAfter = step.kind === 'work' ? steps[index + 1]?.kind === 'rest' ? steps[index + 1].time : 0 : null;
+  const warmCount = def.type === 'mobility' ? 0 : WARMUP.length;
+  const dungeonNo = step.itemIndex - warmCount + 1;
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const isRepSet = step.kind === 'work' && !timed;
+  const shownReps = repsDone ?? step.reps;
+  const needsDb = ex && variation && variationNeedsDb(variation) && hasDumbbells(s);
+  const eq = s.equipment || {};
+  const kg = needsDb ? s.dbWeights?.[ex.id] ?? 0 : 0;
+  const kgStep = eq.dumbbells === 'adjustable' ? 0.5 : 1;
+  const setKg = (v) => actions.setDbWeight(ex.id, Math.max(0, Math.min(eq.maxKg || 100, Math.round(v * 2) / 2)));
+  const prevStep = steps[index - 1];
+  const amrapPrev = isRest && prevStep?.kind === 'work' && prevStep.note && /max reps/i.test(prevStep.note) ? index - 1 : null;
+  const amrapVal = amrapPrev != null ? logRef.current[amrapPrev]?.reps || 0 : 0;
+  const setAmrap = (v) => {
+    if (amrapPrev == null || !logRef.current[amrapPrev]) return;
+    logRef.current[amrapPrev] = { ...logRef.current[amrapPrev], reps: Math.max(0, v) };
+    force((x) => x + 1);
+  };
+  const [gate, setGate] = [gateOpen, setGateOpen];
+  const phase = phaseForDay(day);
+
+  if (gate) {
+    const mods = def.mods || {};
+    const gateLevels = def.items.flatMap((it) => Array(it.sets).fill(EXERCISE_MAP[it.ex].variations[variationFor(it.ex)].level));
+    const gateXp = Math.max(5, Math.round((def.xp * variationMultiplier(gateLevels)) / 5) * 5);
+    return (
+      <div className="workout gate">
+        <header className="wo-top">
+          <button className="icon-btn" onClick={nav.pop} aria-label="Back"><Icon name="close" /></button>
+          <span className="hdr-spacer" />
+        </header>
+        <div className="gate-body">
+          <span className="eyebrow">Today’s mission</span>
+          <div className={`gate-bar grade-${def.difficulty}`} aria-hidden="true"><span /></div>
+          <div className={`gate-rank grade-${def.difficulty}`}>{def.difficulty}-RANK</div>
+          <div className="gate-phase">{phase?.name}</div>
+          <h1 className="gate-title">Day {day} · {def.title}</h1>
+          <div className="gate-facts">
+            <div><small>Estimated time</small><b>{estimateMinutes(def)} min</b></div>
+            <div><small>Reward</small><b>{profile.completedDays.has(day) ? 'Replay' : `+${gateXp} XP`}</b></div>
+            <div><small>Dungeons</small><b>{def.items.length}</b></div>
+          </div>
+          <div className="gate-mods">
+            {mods.recovery && <span className="pill">🛡 Recovery Mode</span>}
+            {mods.exhausted && !mods.recovery && <span className="pill">😴 Lightened (status: exhausted)</span>}
+            {mods.overdrive && <span className="pill pill-od">🔥 Overdrive</span>}
+            {def.cycle > 1 && <span className="pill">Cycle {def.cycle}</span>}
+          </div>
+        </div>
+        <footer className="wo-controls">
+          <Button
+            size="xl"
+            className="w-full gate-btn"
+            onClick={() => {
+              unlockAudio();
+              setGateOpen(false);
+              if (!started) toggleRun();
+              else setRunning(true);
+            }}
+          >
+            {saved ? 'Resume dungeon' : 'Enter dungeon'}
+          </Button>
+          <p className="safety-line">Pain or dizziness? Stop. Your progress is always saved.</p>
+        </footer>
+      </div>
+    );
+  }
 
   return (
     <div className={`workout ${isRest ? 'is-rest' : isPrep ? 'is-prep' : 'is-work'}`}>
@@ -233,13 +325,18 @@ export default function Workout({ day, resume, nav }) {
 
       <div className="wo-body">
         <span className="wo-phase">
-          {isPrep ? 'Get ready' : isRest ? 'Rest' : step.warmup ? 'Warm-up' : 'Current exercise'}
+          {isPrep ? 'Get ready' : isRest ? 'Rest' : step.warmup ? 'Warm-up' : `Dungeon ${pad2(dungeonNo)} / ${pad2(def.items.length)}`}
         </span>
 
         {!isRest && !isPrep && ex && (
           <>
             <h1 className="wo-ex">{variation?.name || ex.name}</h1>
             <p className="wo-base muted">{ex.name}</p>
+            <div className="set-pips" aria-label={`Set ${step.set} of ${step.sets}`}>
+              {Array.from({ length: step.sets }, (_, i) => (
+                <span key={i} className={i + 1 < step.set ? 'done' : i + 1 === step.set ? 'cur' : ''} />
+              ))}
+            </div>
           </>
         )}
         {(isRest || isPrep) && nextEx && (
@@ -283,14 +380,42 @@ export default function Workout({ day, resume, nav }) {
               </>
             ) : (
               <>
-                <span className="dial-big mono">{step.reps}</span>
-                <span className="dial-unit">{step.perSide ? 'reps each side' : 'reps'}</span>
+                <span className="dial-big mono">{shownReps}</span>
+                <span className="dial-unit">{step.perSide ? 'reps each side' : 'reps'}{shownReps !== step.reps ? ` · target ${step.reps}` : ''}</span>
                 <span className="dial-sw mono">{fmt(stopwatch)}</span>
               </>
             )}
           </div>
         </div>
 
+        {isRepSet && !step.warmup && (
+          <div className="reps-adjust" aria-label="Reps you actually did">
+            <button className="chip-btn" onClick={() => setRepsDone(Math.max(0, shownReps - 1))} aria-label="One rep less">−1</button>
+            <span className="muted small">Did more or fewer? Adjust before tapping complete.</span>
+            <button className="chip-btn" onClick={() => setRepsDone(shownReps + 1)} aria-label="One rep more">+1</button>
+          </div>
+        )}
+        {needsDb && step.kind === 'work' && !step.warmup && (
+          <div className="kg-adjust">
+            <span className="muted small">Dumbbell</span>
+            <button className="chip-btn" onClick={() => setKg(kg - kgStep)} aria-label="Lighter">−</button>
+            <b className="mono">{kg ? `${kg} kg` : '— kg'}</b>
+            <button className="chip-btn" onClick={() => setKg(kg + kgStep)} aria-label="Heavier" disabled={eq.maxKg != null && kg >= eq.maxKg}>+</button>
+            {eq.maxKg != null && kg >= eq.maxKg && <small className="muted">your max</small>}
+          </div>
+        )}
+        {amrapPrev != null && (
+          <div className="amrap-log">
+            <b>How many reps did you get?</b>
+            <div className="reps-adjust">
+              <button className="chip-btn" onClick={() => setAmrap(amrapVal - 5)}>−5</button>
+              <button className="chip-btn" onClick={() => setAmrap(amrapVal - 1)}>−1</button>
+              <b className="mono amrap-val">{amrapVal}</b>
+              <button className="chip-btn" onClick={() => setAmrap(amrapVal + 1)}>+1</button>
+              <button className="chip-btn" onClick={() => setAmrap(amrapVal + 5)}>+5</button>
+            </div>
+          </div>
+        )}
         {step.kind === 'work' && (
           <div className="wo-facts">
             <div><small>Set</small><b>{step.set} / {step.sets}</b></div>
@@ -345,6 +470,17 @@ export default function Workout({ day, resume, nav }) {
         title={(ex || nextEx)?.name || 'How to'}
       >
         <ExerciseHelp exId={(ex || nextEx)?.id} />
+        {(() => {
+          const st = ex ? step : step.nextStep;
+          const item = st ? def.items[st.itemIndex - warmCount] : null;
+          if (!item || st?.warmup) return null;
+          return (
+            <details className="help-replace">
+              <summary>Can’t do this exercise? Replace it</summary>
+              <ReplaceExercise original={item.subFrom || item.ex} onDone={() => setHelpOpen(false)} />
+            </details>
+          );
+        })()}
         <p className="muted small center">{wasRunning ? 'Timer paused — closing resumes it.' : 'Timer is paused.'}</p>
       </Sheet>
 

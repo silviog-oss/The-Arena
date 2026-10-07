@@ -10,6 +10,54 @@ import { ScreenHeader, Button, Panel, Disclaimer, ProgressBar, CountUp } from '.
 import { Icon } from '../components/Icons.jsx';
 import { LogoMark } from '../components/Logo.jsx';
 import ExerciseFigure from '../components/ExerciseFigure.jsx';
+import { NewRecords } from '../components/Records.jsx';
+
+const REACH_LABEL = ['Knees', 'Shins', 'Ankles', 'Toes', 'Floor'];
+const pct = (a, b) => (a > 0 ? Math.round(((b - a) / a) * 100) : b > 0 ? 100 : 0);
+
+/** Mission 0 vs latest: raw results with % change, then stat evolution. */
+function EvolutionReport({ first, raw, scores }) {
+  const fb = Math.round(((first.raw.balanceL || 0) + (first.raw.balanceR || 0)) / 2);
+  const nb = Math.round(((raw.balanceL || 0) + (raw.balanceR || 0)) / 2);
+  const rows = [
+    { label: 'Push-ups', a: `${first.raw.pushups} ${first.raw.pushupVariation}`, b: `${raw.pushups} ${raw.pushupVariation}`, p: first.raw.pushupVariation === raw.pushupVariation ? pct(first.raw.pushups, raw.pushups) : null },
+    { label: 'Squats (60 s)', a: first.raw.squats, b: raw.squats, p: pct(first.raw.squats, raw.squats) },
+    { label: 'Plank', a: `${first.raw.plank}s`, b: `${raw.plank}s`, p: pct(first.raw.plank, raw.plank) },
+    { label: 'Balance (avg)', a: `${fb}s`, b: `${nb}s`, p: pct(fb, nb) },
+    { label: 'Reach', a: REACH_LABEL[first.raw.reach ?? 0], b: REACH_LABEL[raw.reach ?? 0], p: null, up: (raw.reach ?? 0) - (first.raw.reach ?? 0) },
+  ];
+  return (
+    <>
+      <div className="evo-table" role="table" aria-label="Mission 0 compared with now">
+        <div className="evo-row head" role="row"><span>Test</span><span>Mission 0</span><span>Now</span><span>Change</span></div>
+        {rows.map((r) => (
+          <div className="evo-row" role="row" key={r.label}>
+            <span>{r.label}</span>
+            <span className="mono muted">{r.a}</span>
+            <span className="mono">{r.b}</span>
+            <span className={`mono evo-pct ${(r.p ?? r.up ?? 0) > 0 ? 'up' : (r.p ?? r.up ?? 0) < 0 ? 'down' : ''}`}>
+              {r.p != null ? `${r.p > 0 ? '+' : ''}${r.p}%` : r.up != null ? (r.up > 0 ? `+${r.up} step${r.up > 1 ? 's' : ''}` : r.up < 0 ? `${r.up}` : '±0') : 'new variation'}
+            </span>
+          </div>
+        ))}
+      </div>
+      <h3 className="evo-title">HUNTER EVOLUTION</h3>
+      <ul className="evo-stats">
+        {STAT_KEYS.map((k) => {
+          const d = scores[k] - first.scores[k];
+          return (
+            <li key={k}>
+              <b style={{ color: STAT_INFO[k].color }}>{k}</b>
+              <span className="mono">{first.scores[k]} → {scores[k]}</span>
+              <span className={`mono evo-pct ${d > 0 ? 'up' : d < 0 ? 'down' : ''}`}>{d > 0 ? `+${d}` : d === 0 ? '±0' : d}</span>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="muted small">Compared with your very first evaluation (Mission 0, {first.date}).</p>
+    </>
+  );
+}
 
 /* ───────── Small building blocks ───────── */
 
@@ -297,6 +345,16 @@ export default function Evaluation({ nav }) {
                 : 'These are your starting stats. Every mission you clear raises them.'}
             </p>
           </Panel>
+          {result.kind === 'retest' && result.first && (
+            <Panel title="Mission 0 vs now" className="fade d3 evo" glow>
+              <EvolutionReport first={result.first} raw={result.raw} scores={result.scores} />
+            </Panel>
+          )}
+          {result.newRecords?.length > 0 && (
+            <Panel title="🏆 New records" className="fade d4">
+              <NewRecords keys={result.newRecords} records={state.records} />
+            </Panel>
+          )}
           {result.kind === 'initial' && apply && (
             <Panel className="fade d3">
               <span className="eyebrow">Starting difficulty</span>

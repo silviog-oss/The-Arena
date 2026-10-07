@@ -28,6 +28,18 @@
 - **Goal weight / goal BMI.** Set a goal either way, log your weight, and see progress, the amount left to lose or gain, and a time estimate at 0.5 kg/week. Goals below a BMI of 18.5 are blocked.
 - **Streaks.** Current and longest streak. Missing a day resets the streak but **never** your program progress.
 - **"?" help during workouts.** Tap **?** in the workout to see an animated stick-figure demo, your current variation and its cue, step-by-step form instructions and a safety tip. The timer pauses while it's open. Figures also appear in mission lists, the exercise library and the evaluation tests (original illustrations, defined in `src/data/poses.js`).
+- **Dungeon-style workouts.** A "Today's mission" gate (rank, phase, time, XP, active modifiers, ENTER DUNGEON), a "DUNGEON 03 / 06" counter with set pips during the workout, and "DUNGEON CLEARED" plus new records at the end.
+- **Workout calendar and history.** A month calendar of workouts, recovery days and evaluations. Tap a day to see each workout's XP, duration, stat gains, modifiers and every set (variation, reps or time, dumbbell weight).
+- **Personal records.** Tracked automatically: most reps in a set (per variation level), longest timed sets, heaviest dumbbell, Day 31 max-rep tests and evaluation bests. New records are celebrated on the finish screen. Log the reps you actually did (±1) and your dumbbell weight during the workout.
+- **Exercise substitution.** "Can't do this? Replace" on every exercise (also inside the workout's ? help) offers alternatives that train similar muscles and stats. It applies everywhere until you restore the original, with reps and time converted automatically.
+- **Hunter Evolution (Day 31).** After Day 31 the Final Evaluation repeats Mission 0 and shows a side-by-side table (Mission 0 vs now, with % change) plus stat evolution.
+- **Recovery system.**
+  - *Hunter Status* daily check-in (😴 / 😐 / ⚡ / 🔥): Exhausted lightens the workout, Excellent unlocks an optional Overdrive (+1 set on the first two exercises, +15% XP).
+  - *Away detection*: after 3+ days away you can choose Recovery Mode (next 2 workouts: −1 set, +15 s rest) or resume normally.
+  - *Rest-day protection*: after 4+ hard days in a row, "Recovery recommended" offers to log a recovery day (keeps your streak, max 2 per week) or a lighter workout. Starting a second mission on the same day also suggests resting.
+- **Equipment profile.** No / fixed / adjustable dumbbells, plus your max weight. Without dumbbells every DB variation is skipped automatically. Weight logging never goes above your max.
+- **Body measurements (optional).** Waist, chest, arms, thighs and hips, each graphed over time.
+- **Progress graphs.** Mission XP over time, minutes per week, growth of each stat (separate charts) and body weight. Tap a chart for exact values.
 - **Exercise library.** 36 movements with muscles, difficulty, equipment, instructions, a safety cue and beginner/standard/advanced variations.
 - **Offline-first PWA.** Everything is precached, and progress lives in localStorage. Export/import backups are available from Profile.
 - **Notifications.** Local reminders (daily mission, streak, mission complete, level/rank up) work now. The Web Push architecture is ready for background delivery (see below).

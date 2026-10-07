@@ -15,7 +15,7 @@ export function initialState() {
       onboarded: false,
       createdAt: Date.now(),
       // Body data stays on this device only. Stored in metric; `units` is display preference.
-      body: { age: null, sex: '', weightKg: null, heightCm: null, units: 'metric', weightLog: [], goal: null },
+      body: { age: null, sex: '', weightKg: null, heightCm: null, units: 'metric', weightLog: [], goal: null, measurements: [] },
     },
     xp: 0,
     cycle: 1, // New Game+ cycle number
@@ -26,6 +26,12 @@ export function initialState() {
     cycles: [], // [{ cycle, finishedAt, xp }]
     stats: { STR: 0, END: 0, AGI: 0, VIT: 0 }, // set by Mission 0 (evaluation)
     evaluations: [], // [{ at, date, kind: 'initial'|'retest', raw, scores }]
+    history: [], // every finished workout: { at, date, day, cycle, title, xp, seconds, stats, sets[], replay, mods }
+    records: {}, // personal records (see lib/records.js)
+    readiness: {}, // { 'YYYY-MM-DD': { level, overdrive } } — Hunter Status check-ins
+    recoveryMode: null, // { remaining, reason, startedAt }
+    restDays: [], // logged recovery days (count toward the streak)
+    awayHandled: null, // date the 'you've been away' prompt was answered
     evalSkipped: false,
     completed: {}, // { [day]: { date, at, xp, seconds, stats, skipped, replays } }
     quests: {}, // { [day]: { daily: bool, bonus: bool } }
@@ -37,6 +43,9 @@ export function initialState() {
       vibration: true,
       keepAwake: true,
       variations: {}, // { [exerciseId]: index }
+      subs: {}, // { [exerciseId]: replacementId } — 'Can't do this exercise?'
+      dbWeights: {}, // { [exerciseId]: last kg used }
+      equipment: { dumbbells: 'fixed', maxKg: null }, // none | fixed | adjustable
       notifications: {
         enabled: false,
         time: '18:00',
@@ -75,6 +84,7 @@ function migrate(data) {
       ...base.settings,
       ...(data.settings || {}),
       notifications: { ...base.settings.notifications, ...(data.settings?.notifications || {}) },
+      equipment: { ...base.settings.equipment, ...(data.settings?.equipment || {}) },
     },
     version: SCHEMA_VERSION,
   };

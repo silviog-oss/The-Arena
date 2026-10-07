@@ -6,6 +6,7 @@ import { Panel, XPBar, RankBadge, StreakChip, Button, ProgressBar, DifficultyTag
 import { Icon } from '../components/Icons.jsx';
 import QuestList from '../components/QuestList.jsx';
 import { useOnline } from '../hooks/useSystem.js';
+import { HunterStatus, RecoveryBanner } from '../components/Training.jsx';
 import { bmi, bmiCategory, bodyComplete, goalProgress } from '../lib/body.js';
 
 export default function Home({ nav }) {
@@ -57,6 +58,27 @@ export default function Home({ nav }) {
       </Panel>
 
       {/* ── Today's mission ── */}
+      <RecoveryBanner nav={nav} />
+
+      {profile.evaluated && !profile.doneToday && !active && mission && mission.type !== 'mobility' && !profile.programComplete && (
+        <Panel title="⚔ Hunter Status · how do you feel today?">
+          <HunterStatus />
+        </Panel>
+      )}
+
+      {profile.programComplete && !active && (() => {
+        const d31 = state.completed[31]?.at || 0;
+        const lastEval = (state.evaluations || []).slice(-1)[0]?.at || 0;
+        return lastEval < d31 ? (
+          <Panel glow className="final-eval">
+            <span className="eyebrow">Hunter Evolution</span>
+            <h2>Final Evaluation ready</h2>
+            <p className="muted small">Repeat the Mission 0 tests and compare Day 1 with today — every test, side by side.</p>
+            <Button size="lg" className="w-full" onClick={() => nav.push({ name: 'evaluation' })}>Start Final Evaluation</Button>
+          </Panel>
+        ) : null;
+      })()}
+
       {!profile.evaluated && !active ? (
         <Panel title="Your first mission" glow className="today-card">
           <div className="today-meta">

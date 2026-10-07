@@ -62,6 +62,10 @@ export const POSES = {
     a: { head: [72, 54], sh: [64, 56], hip: [44, 56], el: [76, 56], ha: [87, 56], kn: [30, 56], ft: [17, 56] },
     b: { head: [72, 50], sh: [64, 54], hip: [44, 57], el: [76, 51], ha: [87, 46], kn: [30, 54], ft: [17, 50] },
   },
+  reverse_snow_angel: {
+    a: { head: [72, 52], sh: [64, 55], hip: [44, 56], el: [56, 55], ha: [48, 55], kn: [30, 56], ft: [17, 56] },
+    b: { head: [72, 52], sh: [64, 55], hip: [44, 56], el: [74, 53], ha: [84, 51], kn: [30, 56], ft: [17, 56] },
+  },
   squat: { a: standArmsFwd, b: squatDown },
   goblet_squat: {
     a: { ...stand, el: [55, 28], ha: [55, 21], db: true },

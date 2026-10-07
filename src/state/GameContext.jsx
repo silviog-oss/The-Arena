@@ -1,6 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import { load, save, initialState, importData } from '../lib/storage.js';
-import { completeDay, toggleQuest, startNextCycle, completeEvaluation, skipEvaluation } from '../lib/game.js';
+import {
+  completeDay, toggleQuest, startNextCycle, completeEvaluation, skipEvaluation,
+  setReadiness, startRecoveryMode, endRecoveryMode, logRestDay,
+} from '../lib/game.js';
+import { dayForState, variationNeedsDb, hasDumbbells } from '../lib/modifiers.js';
 import { deriveProfile, toDateKey } from '../lib/progression.js';
 import { EXERCISE_MAP, defaultVariationIndex } from '../data/exercises.js';
 import { dayFor as adaptedDay, intensityFor } from '../lib/intensity.js';
@@ -65,10 +69,15 @@ export function GameProvider({ children }) {
     (exId) => {
       const ex = EXERCISE_MAP[exId];
       const saved = state.settings.variations[exId];
-      if (saved != null && ex.variations[saved]) return saved;
-      return defaultVariationIndex(ex, state.profile.experience);
+      let idx = saved != null && ex.variations[saved] ? saved : defaultVariationIndex(ex, state.profile.experience);
+      // Equipment profile: without dumbbells, never pick a variation that needs them.
+      if (!hasDumbbells(state.settings) && variationNeedsDb(ex.variations[idx])) {
+        const ok = ex.variations.map((v, i) => [v, i]).filter(([v]) => !variationNeedsDb(v));
+        if (ok.length) idx = ok.reduce((best, cur) => (Math.abs(cur[1] - idx) < Math.abs(best[1] - idx) ? cur : best))[1];
+      }
+      return idx;
     },
-    [state.settings.variations, state.profile.experience],
+    [state.settings.variations, state.settings.equipment, state.profile.experience],
   );
 
   const actions = useMemo(
@@ -97,6 +106,27 @@ export function GameProvider({ children }) {
         dispatch({ type: 'REPLACE', state: next });
         return result;
       },
+      setReadiness: (level, opts) => dispatch({ type: 'REPLACE', state: setReadiness(stateRef.current, level, opts) }),
+      startRecoveryMode: (opts) => dispatch({ type: 'REPLACE', state: startRecoveryMode(stateRef.current, opts) }),
+      endRecoveryMode: () => dispatch({ type: 'REPLACE', state: endRecoveryMode(stateRef.current) }),
+      logRestDay: () => dispatch({ type: 'REPLACE', state: logRestDay(stateRef.current) }),
+      markAwayHandled: () => dispatch({ type: 'REPLACE', state: { ...stateRef.current, awayHandled: toDateKey() } }),
+      setSub: (exId, to) => {
+        const subs = { ...(stateRef.current.settings.subs || {}) };
+        if (to) subs[exId] = to;
+        else delete subs[exId];
+        dispatch({ type: 'SETTINGS', patch: { subs } });
+      },
+      setEquipment: (patch) =>
+        dispatch({ type: 'SETTINGS', patch: { equipment: { ...stateRef.current.settings.equipment, ...patch } } }),
+      setDbWeight: (exId, kg) =>
+        dispatch({ type: 'SETTINGS', patch: { dbWeights: { ...(stateRef.current.settings.dbWeights || {}), [exId]: kg } } }),
+      addMeasurement: (m) => {
+        const body = stateRef.current.profile.body;
+        const date = toDateKey();
+        const list = (body.measurements || []).filter((x) => x.date !== date);
+        dispatch({ type: 'SET_BODY', body: { measurements: [...list, { ...m, date }].slice(-200) } });
+      },
       skipEvaluation: () => dispatch({ type: 'REPLACE', state: skipEvaluation(stateRef.current) }),
       startNextCycle: () => dispatch({ type: 'REPLACE', state: startNextCycle(stateRef.current) }),
       importBackup: (text) => dispatch({ type: 'REPLACE', state: importData(text) }),
@@ -108,7 +138,7 @@ export function GameProvider({ children }) {
   const body = state.profile.body;
   const intensity = useMemo(() => intensityFor(body), [body]);
   const cycle = state.cycle || 1;
-  const dayFor = useCallback((d) => adaptedDay(d, body, cycle), [body, cycle]);
+  const dayFor = useCallback((d) => dayForState(d, state), [state]);
 
   const value = useMemo(
     () => ({ state, profile, actions, variationFor, dayFor, intensity }),

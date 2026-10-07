@@ -190,6 +190,29 @@ export const EXERCISES = [
     ],
   },
 
+  {
+    id: 'reverse_snow_angel',
+    name: 'Reverse Snow Angel',
+    category: 'Pull',
+    muscles: ['Upper back', 'Rear shoulders', 'Lower back'],
+    difficulty: 1,
+    equipment: BW,
+    type: 'reps',
+    secPerRep: 4,
+    stats: { STR: 1.5, VIT: 1 },
+    instructions: [
+      'Lie face down, arms at your sides, palms down. Lift your chest slightly.',
+      'Keeping arms straight and just off the floor, sweep them out and overhead like a snow angel.',
+      'Sweep them back to your sides. Squeeze your shoulder blades the whole time.',
+    ],
+    safety: 'Keep the movement slow and your neck neutral — look at the floor.',
+    variations: [
+      { name: 'Half-Range Snow Angel', level: 'beginner', cue: 'Sweep only to shoulder height.' },
+      { name: 'Reverse Snow Angel', level: 'standard', cue: 'Full sweep overhead and back.' },
+      { name: 'Paused Snow Angel', level: 'advanced', cue: '2-second pause overhead and at the sides.' },
+    ],
+  },
+
   // ───────────── LEGS ─────────────
   {
     id: 'squat',

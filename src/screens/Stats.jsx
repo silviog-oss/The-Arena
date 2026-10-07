@@ -2,6 +2,9 @@ import { useGame } from '../state/GameContext.jsx';
 import { DAY_MAP, TOTAL_DAYS } from '../data/program.js';
 import { STAT_KEYS, STAT_INFO, RANKS } from '../lib/progression.js';
 import { ScreenHeader, Panel, StatBar, RankBadge } from '../components/UI.jsx';
+import Calendar from '../components/Calendar.jsx';
+import Records from '../components/Records.jsx';
+import ProgressGraphs from '../components/Progress.jsx';
 
 function Radar({ stats }) {
   const max = Math.max(40, ...STAT_KEYS.map((k) => stats[k])) * 1.1;
@@ -48,6 +51,18 @@ export default function Stats({ nav }) {
   return (
     <div className="screen">
       <ScreenHeader title="Stats" sub={`Level ${profile.level} · ${profile.rank.name}`} />
+
+      <Panel title="🗓 Training calendar">
+        <Calendar />
+      </Panel>
+
+      <Panel title="🏆 Personal records" action={<span className="mono muted">{Object.keys(state.records || {}).length}</span>}>
+        <Records />
+      </Panel>
+
+      <Panel title="📈 Progress">
+        <ProgressGraphs />
+      </Panel>
 
       <Panel title="Attributes">
         <Radar stats={state.stats} />

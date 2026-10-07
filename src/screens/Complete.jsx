@@ -7,6 +7,7 @@ import { notify, MESSAGES } from '../lib/notifications.js';
 import { Button, CountUp, RankBadge, Panel } from '../components/UI.jsx';
 import { LogoMark } from '../components/Logo.jsx';
 import QuestList from '../components/QuestList.jsx';
+import { NewRecords } from '../components/Records.jsx';
 
 export default function Complete({ result, nav }) {
   const { state } = useGame();
@@ -29,7 +30,7 @@ export default function Complete({ result, nav }) {
         <div className="burst" aria-hidden="true" />
         <LogoMark size={84} glow className="pop" />
         <p className="eyebrow fade d1">{result.replay ? 'Training replay' : 'System message'}</p>
-        <h1 className="complete-title fade d1">MISSION COMPLETE</h1>
+        <h1 className="complete-title fade d1">DUNGEON CLEARED</h1>
         <p className="muted fade d2">Day {result.day} · “{result.title}” · {mins} min</p>
       </div>
 
@@ -86,6 +87,21 @@ export default function Complete({ result, nav }) {
             <h2>{result.rankAfter.name}</h2>
             <p className="muted small">{result.rankAfter.perk}</p>
           </div>
+        </Panel>
+      )}
+
+      {result.newRecords?.length > 0 && (
+        <Panel title="🏆 New record" className="fade d3 records-panel" glow>
+          <NewRecords keys={result.newRecords} records={result.records} />
+        </Panel>
+      )}
+
+      {result.day === 31 && !result.replay && (
+        <Panel className="fade d4 final-eval" glow>
+          <span className="eyebrow">Hunter Evolution</span>
+          <h2>Take the Final Evaluation</h2>
+          <p className="muted small">Repeat the four Mission 0 tests and see exactly how much stronger you got since Day 1.</p>
+          <Button size="lg" className="w-full" onClick={() => nav.replace({ name: 'evaluation' })}>Start Final Evaluation</Button>
         </Panel>
       )}
 
