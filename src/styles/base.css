@@ -1,0 +1,159 @@
+/* ───────── Design tokens ───────── */
+:root {
+  --bg: #07080d;
+  --bg-2: #0c0e16;
+  --panel: #10131d;
+  --panel-2: #151927;
+  --line: #222842;
+  --line-2: #2d3557;
+  --text: #eef1ff;
+  --text-2: #aab2d0;
+  --muted: #6f789a;
+  --blue: #5b8cff;
+  --blue-2: #6ea8ff;
+  --violet: #8b6cff;
+  --violet-2: #a66bff;
+  --accent: linear-gradient(135deg, var(--blue-2), var(--violet-2));
+  --ok: #45d39a;
+  --warn: #ffb547;
+  --danger: #ff5d6c;
+  --flame: #ff8a3d;
+  --glow: 0 0 0 1px rgba(110, 168, 255, 0.35), 0 0 22px rgba(110, 120, 255, 0.18);
+  --r: 16px;
+  --r-sm: 10px;
+  --nav-h: 66px;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, system-ui, sans-serif;
+  --mono: 'SF Mono', ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+body {
+  min-height: 100dvh;
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(91, 108, 255, 0.14), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  touch-action: manipulation;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+:focus-visible {
+  outline: 2px solid var(--blue-2);
+  outline-offset: 2px;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: 0.82rem; }
+.center { text-align: center; }
+.pad { padding: 20px; }
+.pad-b { padding-bottom: 24px; }
+.w-full { width: 100%; }
+.stack { display: grid; gap: 10px; margin-top: 16px; }
+.eyebrow {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.note {
+  font-size: 0.85rem;
+  color: var(--text-2);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  margin: 10px 0;
+}
+
+/* ───────── App shell ───────── */
+.app {
+  max-width: 560px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  position: relative;
+}
+.tab-screen,
+.view {
+  animation: screen-in 0.22s ease-out;
+}
+.screen {
+  padding: calc(var(--safe-t) + 12px) 16px calc(var(--nav-h) + var(--safe-b) + 24px);
+  display: grid;
+  gap: 14px;
+}
+.view .screen {
+  padding-bottom: calc(var(--safe-b) + 28px);
+}
+.view .screen.with-cta {
+  padding-bottom: calc(var(--safe-b) + 110px);
+}
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Desktop: center the phone-shaped app */
+@media (min-width: 700px) {
+  .app {
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    background: rgba(7, 8, 13, 0.6);
+  }
+}

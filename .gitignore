@@ -1,0 +1,7 @@
+node_modules
+dist
+.env
+.env.local
+push-server/node_modules
+push-server/subscriptions.json
+.DS_Store

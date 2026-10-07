@@ -1,0 +1,9 @@
+{
+  "name": "the-arena-push-server",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Minimal Web Push reminder server for The Arena",
+  "scripts": { "start": "node server.js", "keys": "web-push generate-vapid-keys" },
+  "dependencies": { "cors": "^2.8.5", "express": "^4.21.0", "web-push": "^3.6.7" }
+}

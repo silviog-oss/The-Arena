@@ -1,0 +1,21 @@
+{
+  "name": "the-arena",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "31-day RPG calisthenics training PWA",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "icons": "python3 scripts/make_icons.py"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.0"
+  }
+}

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#07080d" />
+    <meta name="description" content="The Arena — a 31-day RPG calisthenics training app. Complete missions, earn XP, rank up." />
+    <title>The Arena</title>
+
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="./logo.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon.png" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+
+    <!-- iOS standalone mode -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="The Arena" />
+
+    <!-- iOS launch screens (portrait) -->
+    <link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" href="./splash/splash-1290x2796.png" />
+    <link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" href="./splash/splash-1179x2556.png" />
+    <link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" href="./splash/splash-1170x2532.png" />
+    <link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)" href="./splash/splash-1284x2778.png" />
+    <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" href="./splash/splash-1125x2436.png" />
+    <link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" href="./splash/splash-828x1792.png" />
+    <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" href="./splash/splash-750x1334.png" />
+
+    <style>
+      /* Inline boot splash: visible instantly, before JS loads. */
+      html, body { margin: 0; background: #07080d; }
+      #boot {
+        position: fixed; inset: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 18px;
+        color: #c9d4ff; font: 600 13px/1 -apple-system, system-ui, sans-serif;
+        letter-spacing: .35em; text-transform: uppercase;
+      }
+      #boot .sigil {
+        width: 88px; height: 88px; filter: drop-shadow(0 0 16px #6e7cff88);
+        animation: bootpulse 1.4s ease-in-out infinite;
+      }
+      @keyframes bootpulse { 50% { transform: scale(.92); opacity: .6; } }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div id="boot"><img class="sigil" src="./logo.svg" alt="" />The Arena</div>
+    </div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
